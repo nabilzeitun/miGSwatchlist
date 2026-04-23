@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Watchlist</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Playfair+Display:ital,wght@0,700;1,500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink:    #0f0e0c;
+  --paper:  #f5f2eb;
+  --paper2: #edeae1;
+  --rule:   #d8d3c8;
+  --rule2:  #c8c2b5;
+  --muted:  #9a9385;
+  --ghost:  #b8b2a7;
+  --up:     #1a5c38;
+  --up-bg:  #e8f4ee;
+  --dn:     #7a1a1a;
+  --dn-bg:  #f4e8e8;
+  --flag:   #b8420a;
+  --flag-bg:#fdf0e8;
+  --mono:'DM Mono',monospace;
+  --serif:'Playfair Display',serif;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{font-size:13px;}
+body{background:var(--paper);color:var(--ink);font-family:var(--mono);min-height:100vh;}
+
+/* TOPBAR */
+#topbar{position:fixed;top:0;left:0;right:0;z-index:200;height:54px;background:var(--ink);
+  display:flex;align-items:center;justify-content:space-between;padding:0 24px;
+  border-bottom:1px solid #2a2824;}
+.brand{display:flex;align-items:baseline;gap:12px;}
+.brand-name{font-family:var(--serif);font-style:italic;font-size:1.15rem;color:var(--paper);letter-spacing:.02em;}
+.brand-sub{font-size:.58rem;color:var(--muted);letter-spacing:.15em;text-transform:uppercase;}
+.top-right{display:flex;align-items:center;gap:16px;}
+#last-upd{font-size:.58rem;color:var(--muted);letter-spacing:.08em;}
+.btn-reload{background:none;border:1px solid #3a3830;color:var(--ghost);font-family:var(--mono);
+  font-size:.65rem;padding:5px 12px;cursor:pointer;letter-spacing:.08em;text-transform:uppercase;
+  transition:all .15s;display:flex;align-items:center;gap:6px;}
+.btn-reload:hover{border-color:var(--paper);color:var(--paper);}
+.btn-reload:disabled{opacity:.35;cursor:not-allowed;}
+.spin{display:inline-block;width:10px;height:10px;border:1.5px solid rgba(255,255,255,.2);
+  border-top-color:rgba(255,255,255,.7);border-radius:50%;animation:ro .6s linear infinite;}
+@keyframes ro{to{transform:rotate(360deg);}}
+
+/* STATSBAR */
+#statsbar{position:fixed;top:54px;left:0;right:0;z-index:199;height:44px;
+  background:var(--paper2);border-bottom:1px solid var(--rule);
+  display:flex;align-items:center;padding:0 24px;gap:32px;overflow-x:auto;}
+.stat{display:flex;flex-direction:column;gap:1px;flex-shrink:0;}
+.stat-l{font-size:.52rem;text-transform:uppercase;letter-spacing:.12em;color:var(--ghost);}
+.stat-v{font-size:.8rem;font-weight:500;}
+.stat-v.up{color:var(--up);}.stat-v.dn{color:var(--dn);}
+
+/* TOOLBAR */
+#toolbar{position:fixed;top:98px;left:0;right:0;z-index:198;background:var(--paper);
+  border-bottom:1px solid var(--rule);display:flex;align-items:center;gap:10px;
+  padding:8px 24px;flex-wrap:wrap;}
+.search-wrap{position:relative;flex:1;min-width:180px;max-width:300px;}
+.search-wrap svg{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--ghost);pointer-events:none;}
+input[type=text]{width:100%;background:var(--paper2);border:1px solid var(--rule2);
+  color:var(--ink);font-family:var(--mono);font-size:.75rem;padding:6px 10px;
+  outline:none;transition:border-color .15s;}
+input[type=text]:focus{border-color:var(--ink);}
+input[type=text]::placeholder{color:var(--ghost);}
+.search-wrap input{padding-left:28px;}
+.sep{width:1px;height:22px;background:var(--rule2);flex-shrink:0;}
+.btn-sm{background:var(--paper2);border:1px solid var(--rule2);color:var(--muted);
+  font-family:var(--mono);font-size:.62rem;padding:6px 11px;cursor:pointer;
+  letter-spacing:.06em;text-transform:uppercase;display:flex;align-items:center;gap:5px;
+  transition:all .15s;white-space:nowrap;flex-shrink:0;}
+.btn-sm:hover{border-color:var(--ink);color:var(--ink);}
+.filter-group{display:flex;gap:4px;flex-shrink:0;}
+.fbtn{background:none;border:1px solid var(--rule2);color:var(--ghost);font-family:var(--mono);
+  font-size:.6rem;padding:5px 10px;cursor:pointer;letter-spacing:.06em;text-transform:uppercase;transition:all .15s;}
+.fbtn:hover,.fbtn.active{background:var(--ink);border-color:var(--ink);color:var(--paper);}
+
+/* SCROLL */
+#scroll{position:fixed;top:142px;left:0;right:0;bottom:0;overflow:auto;-webkit-overflow-scrolling:touch;}
+
+/* TABLE */
+table{width:100%;border-collapse:collapse;min-width:920px;}
+thead th{position:sticky;top:0;z-index:10;background:var(--paper2);padding:7px 14px;
+  text-align:left;font-size:.53rem;text-transform:uppercase;letter-spacing:.12em;
+  color:var(--ghost);font-weight:400;border-bottom:2px solid var(--rule2);
+  white-space:nowrap;cursor:pointer;user-select:none;transition:color .15s;}
+thead th:hover{color:var(--ink);}
+thead th.r{text-align:right;}
+thead th.sorted{color:var(--ink);}
+thead th.sorted::after{content:' ↓';font-size:.5rem;}
+thead th.sorted.asc::after{content:' ↑';}
+tbody tr{border-bottom:1px solid var(--rule);transition:background .08s;}
+tbody tr:last-child{border-bottom:none;}
+tbody tr:hover{background:var(--paper2);}
+tbody tr.flagged{background:var(--flag-bg);}
+tbody tr.flagged:hover{background:#fce8d8;}
+td{padding:9px 14px;vertical-align:middle;}
+
+.c-idx{color:var(--ghost);font-size:.62rem;text-align:right;width:32px;padding-right:8px;}
+.c-fdot{width:12px;padding:0 4px;}
+.flag-dot{width:7px;height:7px;border-radius:50%;background:var(--flag);display:inline-block;}
+.c-tick{font-weight:500;font-size:.85rem;letter-spacing:.03em;white-space:nowrap;}
+.c-mkt{width:90px;}
+.mkt-badge{display:inline-block;padding:2px 6px;background:var(--paper2);
+  border:1px solid var(--rule2);font-size:.54rem;letter-spacing:.06em;color:var(--muted);}
+.c-name{color:var(--muted);font-size:.72rem;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.c-price{text-align:right;font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap;}
+.cur{font-size:.56rem;color:var(--ghost);margin-left:3px;}
+.c-tgt{text-align:right;}
+.tgt-span{font-variant-numeric:tabular-nums;cursor:pointer;padding:3px 6px;
+  border:1px dashed transparent;transition:all .15s;font-size:.8rem;white-space:nowrap;display:inline-block;}
+.tgt-span:hover{border-color:var(--rule2);background:var(--paper2);}
+.tgt-inp{width:82px;text-align:right;background:var(--paper2);border:1px solid var(--ink);
+  font-family:var(--mono);font-size:.8rem;color:var(--ink);padding:3px 6px;outline:none;}
+.c-up{text-align:right;}
+.pill{display:inline-block;padding:3px 8px;font-size:.7rem;font-weight:500;
+  font-variant-numeric:tabular-nums;min-width:64px;text-align:center;}
+.pill.up{background:var(--up-bg);color:var(--up);}
+.pill.dn{background:var(--dn-bg);color:var(--dn);}
+.pill.nt{background:var(--paper2);color:var(--ghost);}
+.c-high,.c-low{text-align:right;font-variant-numeric:tabular-nums;font-size:.75rem;color:var(--muted);white-space:nowrap;}
+.c-chart{width:108px;}
+.c-flaginp{width:90px;}
+.flag-inp{width:82px;background:transparent;border:none;border-bottom:1px solid transparent;
+  font-family:var(--mono);font-size:.7rem;color:var(--flag);padding:2px 4px;outline:none;transition:border-color .15s;}
+.flag-inp:focus,.flag-inp:hover{border-bottom-color:var(--rule2);background:var(--paper2);}
+
+.sk{display:inline-block;height:10px;border-radius:2px;
+  background:linear-gradient(90deg,var(--rule) 25%,var(--paper2) 50%,var(--rule) 75%);
+  background-size:200% 100%;animation:sh 1.3s infinite;}
+@keyframes sh{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.row-empty td{padding:60px;text-align:center;color:var(--ghost);font-size:.8rem;}
+
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(15,14,12,.5);z-index:500;
+  display:flex;align-items:center;justify-content:center;padding:20px;}
+.modal{background:var(--paper);border:1px solid var(--rule2);padding:28px;
+  max-width:440px;width:100%;box-shadow:0 24px 64px rgba(0,0,0,.15);}
+.modal h3{font-family:var(--serif);font-style:italic;font-size:1.1rem;margin-bottom:8px;}
+.modal p{font-size:.7rem;color:var(--muted);margin-bottom:14px;line-height:1.7;}
+.modal textarea{width:100%;height:150px;background:var(--paper2);border:1px solid var(--rule2);
+  font-family:var(--mono);font-size:.68rem;color:var(--ink);padding:10px;outline:none;resize:vertical;margin-bottom:12px;}
+.modal-btns{display:flex;gap:8px;justify-content:flex-end;}
+.mbtn{background:var(--paper2);border:1px solid var(--rule2);color:var(--muted);
+  font-family:var(--mono);font-size:.68rem;padding:7px 16px;cursor:pointer;
+  letter-spacing:.06em;text-transform:uppercase;transition:all .15s;}
+.mbtn:hover{border-color:var(--ink);color:var(--ink);}
+.mbtn.primary{background:var(--ink);color:var(--paper);border-color:var(--ink);}
+.mbtn.primary:hover{opacity:.85;}
+
+/* TOAST */
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(60px);
+  background:var(--ink);color:var(--paper);padding:8px 20px;font-size:.7rem;
+  letter-spacing:.06em;z-index:600;pointer-events:none;
+  transition:transform .25s cubic-bezier(.34,1.56,.64,1);}
+#toast.show{transform:translateX(-50%) translateY(0);}
+
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--rule2);}
+@media(max-width:640px){.brand-sub,#last-upd,.c-name{display:none;}}
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <div class="brand">
+    <span class="brand-name">Watchlist</span>
+    <span class="brand-sub">Portfolio Tracker</span>
+  </div>
+  <div class="top-right">
+    <span id="last-upd"></span>
+    <button class="btn-reload" id="btn-reload" onclick="loadSheet()">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M3 12a9 9 0 019-9 9.75 9.75 0 016.74 2.74L21 8"/>
+        <path d="M21 3v5h-5"/><path d="M21 12a9 9 0 01-9 9 9.75 9.75 0 01-6.74-2.74L3 16"/>
+        <path d="M8 16H3v5"/>
+      </svg>
+      Actualizar
+    </button>
+  </div>
+</div>
+
+<div id="statsbar">
+  <div class="stat"><span class="stat-l">Total</span><span class="stat-v" id="s-tot">—</span></div>
+  <div class="stat"><span class="stat-l">Cargadas</span><span class="stat-v" id="s-ld">—</span></div>
+  <div class="stat"><span class="stat-l">Baratas</span><span class="stat-v up" id="s-up">—</span></div>
+  <div class="stat"><span class="stat-l">Caras</span><span class="stat-v dn" id="s-dn">—</span></div>
+  <div class="stat"><span class="stat-l">Upside medio</span><span class="stat-v" id="s-avg">—</span></div>
+</div>
+
+<div id="toolbar">
+  <div class="search-wrap">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+    </svg>
+    <input type="text" id="q" placeholder="Buscar ticker, empresa, mercado…" oninput="render()">
+  </div>
+  <div class="filter-group">
+    <button class="fbtn active" id="f-all"  onclick="setFilter('all')">Todas</button>
+    <button class="fbtn"        id="f-up"   onclick="setFilter('up')">Baratas</button>
+    <button class="fbtn"        id="f-dn"   onclick="setFilter('dn')">Caras</button>
+    <button class="fbtn"        id="f-flag" onclick="setFilter('flag')">🔥 Destacadas</button>
+  </div>
+  <div class="sep"></div>
+  <button class="btn-sm" onclick="doExport()">
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+      <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+    </svg>
+    Exportar CSV
+  </button>
+  <button class="btn-sm" onclick="openImport()">
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+      <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+    </svg>
+    Importar CSV
+  </button>
+</div>
+
+<div id="scroll">
+  <table>
+    <thead>
+      <tr>
+        <th class="c-idx">#</th>
+        <th class="c-fdot"></th>
+        <th onclick="sortBy('tick')">Ticker</th>
+        <th onclick="sortBy('mkt')">Mercado</th>
+        <th>Empresa</th>
+        <th class="r" onclick="sortBy('price')">Precio</th>
+        <th class="r" onclick="sortBy('target')">Objetivo</th>
+        <th class="r sorted" id="th-upside" onclick="sortBy('upside')">Upside %</th>
+        <th class="r" onclick="sortBy('high52')">Máx 52s</th>
+        <th class="r" onclick="sortBy('low52')">Mín 52s</th>
+        <th>Chart 52s</th>
+        <th>Flag</th>
+      </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+</div>
+
+<div class="overlay" id="modal" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal">
+    <h3>Importar objetivos</h3>
+    <p>Pega el contenido de un CSV exportado previamente (TICKER,TARGET por línea).</p>
+    <textarea id="csv-in" placeholder="KHC,29.00&#10;NKE,56.00&#10;…"></textarea>
+    <div class="modal-btns">
+      <button class="mbtn" onclick="document.getElementById('modal').style.display='none'">Cancelar</button>
+      <button class="mbtn primary" onclick="doImport()">Importar</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQhCXI4uXagUPUSv-QomsWuEoCDHlFlxzrFTXSgi9aQ8Oy1sEacerfIdKxPGZdm1VJw-P1PzNQH5Q3_/pub?gid=0&single=true&output=csv';
+
+// ── PERSISTENT STORE ──
+const store = {
+  get targets(){ try{return JSON.parse(localStorage.getItem('wl_targets')||'{}')}catch{return{}} },
+  set targets(v){ localStorage.setItem('wl_targets',JSON.stringify(v)) },
+  get flags(){ try{return JSON.parse(localStorage.getItem('wl_flags')||'{}')}catch{return{}} },
+  set flags(v){ localStorage.setItem('wl_flags',JSON.stringify(v)) },
+};
+
+// ── MARKET FLAGS ──
+const MF = {NASDAQ:'🇺🇸',NYSE:'🇺🇸',US:'🇺🇸',OTC:'🇺🇸',BME:'🇪🇸',LON:'🇬🇧',
+            HKG:'🇭🇰',AMS:'🇳🇱',EPA:'🇫🇷',ETR:'🇩🇪',ASX:'🇦🇺',BIT:'🇮🇹',
+            VIE:'🇦🇹',FRA:'🇩🇪',SWX:'🇨🇭'};
+const mflag = m => MF[m]||'🌐';
+
+// ── STATE ──
+let rows = [];
+let sortKey = 'upside';
+let sortDir = -1;
+let filterMode = 'all';
+
+// ── PARSE CSV ──
+function parseNum(s) {
+  if (!s || s.trim()==='' || s.trim()==='#N/A' || s.trim()==='#REF!' || s.trim()==='#ERROR!') return null;
+  // Handle both comma and dot as decimal separator
+  let c = s.trim();
+  // If contains both dot and comma, the last one is decimal
+  const dots = (c.match(/\./g)||[]).length;
+  const commas = (c.match(/,/g)||[]).length;
+  if (dots>=1 && commas>=1) {
+    // e.g. "1.234,56" → 1234.56
+    c = c.replace(/\./g,'').replace(',','.');
+  } else if (commas===1 && dots===0) {
+    // e.g. "29,00" → 29.00
+    c = c.replace(',','.');
+  }
+  const v = parseFloat(c);
+  return isNaN(v) ? null : v;
+}
+
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
+  if (lines.length < 2) return [];
+  const targets = store.targets;
+  const flags   = store.flags;
+  const out = [];
+
+  for (let i=1; i<lines.length; i++) {
+    // Simple CSV split — handles quoted fields minimally
+    const cols = lines[i].split(',');
+    if (cols.length < 5) continue;
+    const tick   = (cols[0]||'').trim().replace(/^"|"$/g,'');
+    const mkt    = (cols[1]||'').trim().replace(/^"|"$/g,'');
+    const name   = (cols[3]||'').trim().replace(/^"|"$/g,'');
+    const price  = parseNum(cols[4]);
+    const tgtRaw = parseNum(cols[5]);
+    const cur    = (cols[6]||'').trim().replace(/^"|"$/g,'');
+    const flagSh = (cols[7]||'').trim().replace(/^"|"$/g,'');
+    const high52 = parseNum(cols[8]);
+    const low52  = parseNum(cols[9]);
+
+    if (!tick) continue;
+
+    const target = targets[tick] !== undefined ? targets[tick] : tgtRaw;
+    const flagVal = flags[tick] !== undefined ? flags[tick] : flagSh;
+
+    out.push({tick, mkt, name, price, target, cur, flag:flagVal, high52, low52});
+  }
+  return out;
+}
+
+function upside(r) {
+  if (r.price==null || r.target==null) return null;
+  return ((r.target - r.price) / r.price) * 100;
+}
+
+// ── LOAD ──
+async function loadSheet() {
+  const btn = document.getElementById('btn-reload');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin"></span> Cargando…';
+  try {
+    const res = await fetch(CSV_URL + '&t=' + Date.now());
+    if (!res.ok) throw new Error('HTTP '+res.status);
+    const text = await res.text();
+    rows = parseCSV(text);
+    document.getElementById('last-upd').textContent = 'Act. '+new Date().toLocaleTimeString('es-ES');
+    updateStats(); render();
+    toast('✓ '+rows.length+' posiciones cargadas');
+  } catch(e) {
+    toast('❌ '+e.message);
+  }
+  btn.disabled = false;
+  btn.innerHTML = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 019-9 9.75 9.75 0 016.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 01-9 9 9.75 9.75 0 01-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg> Actualizar`;
+}
+
+// ── STATS ──
+function updateStats() {
+  const ok = rows.filter(r=>r.price!=null&&r.target!=null);
+  const ups = ok.filter(r=>upside(r)>0).length;
+  const dns = ok.filter(r=>upside(r)!=null&&upside(r)<=0).length;
+  const avg = ok.length ? ok.reduce((s,r)=>s+upside(r),0)/ok.length : null;
+  document.getElementById('s-tot').textContent = rows.length||'—';
+  document.getElementById('s-ld').textContent  = rows.filter(r=>r.price!=null).length+(rows.length?'/'+rows.length:'');
+  document.getElementById('s-up').textContent  = ups||'—';
+  document.getElementById('s-dn').textContent  = dns||'—';
+  const el = document.getElementById('s-avg');
+  el.textContent = avg!=null?(avg>=0?'+':'')+avg.toFixed(1)+'%':'—';
+  el.className = 'stat-v'+(avg==null?'':avg>0?' up':' dn');
+}
+
+// ── SORT ──
+const TH_IDX = {tick:2,mkt:3,price:5,target:6,upside:7,high52:8,low52:9};
+function sortBy(key) {
+  if (sortKey===key) sortDir*=-1; else {sortKey=key; sortDir=key==='upside'?-1:1;}
+  document.querySelectorAll('thead th').forEach(th=>th.classList.remove('sorted','asc'));
+  const ths = document.querySelectorAll('thead th');
+  const idx = TH_IDX[key];
+  if (idx!=null && ths[idx]) {
+    ths[idx].classList.add('sorted');
+    if (sortDir===1) ths[idx].classList.add('asc');
+  }
+  render();
+}
+
+// ── FILTER ──
+function setFilter(mode) {
+  filterMode = mode;
+  ['all','up','dn','flag'].forEach(f=>document.getElementById('f-'+f).classList.toggle('active',f===mode));
+  render();
+}
+
+// ── RENDER ──
+const fmt = (v,d=2) => v==null?'—':v.toLocaleString('es-ES',{minimumFractionDigits:d,maximumFractionDigits:d});
+
+function render() {
+  const q = (document.getElementById('q').value||'').toLowerCase();
+  let list = rows.filter(r=>{
+    if (q && !r.tick.toLowerCase().includes(q) && !(r.name||'').toLowerCase().includes(q) && !r.mkt.toLowerCase().includes(q)) return false;
+    if (filterMode==='up' && !(upside(r)>0)) return false;
+    if (filterMode==='dn' && !(upside(r)!=null&&upside(r)<=0)) return false;
+    if (filterMode==='flag' && !r.flag) return false;
+    return true;
+  });
+
+  list.sort((a,b)=>{
+    if (sortKey==='tick') return sortDir*(a.tick<b.tick?-1:a.tick>b.tick?1:0);
+    if (sortKey==='mkt')  return sortDir*(a.mkt<b.mkt?-1:a.mkt>b.mkt?1:0);
+    let va,vb;
+    if (sortKey==='upside') {
+      va=upside(a); vb=upside(b);
+      if (va==null&&vb==null) return 0;
+      if (va==null) return 1; if (vb==null) return -1;
+      return sortDir*(va-vb);
+    }
+    const map = {price:'price',target:'target',high52:'high52',low52:'low52'};
+    va=a[map[sortKey]]??-Infinity; vb=b[map[sortKey]]??-Infinity;
+    return sortDir*(va-vb);
+  });
+
+  const tbody = document.getElementById('tbody');
+  if (!list.length) {
+    tbody.innerHTML='<tr class="row-empty"><td colspan="12">Sin resultados</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = list.map((r,i)=>{
+    const u = upside(r);
+    const uCl = u==null?'nt':u>0?'up':'dn';
+    const uSt = u==null?'—':(u>=0?'+':'')+u.toFixed(1)+'%';
+    const rid = 'r_'+r.tick.replace(/[^a-zA-Z0-9]/g,'_');
+    const safeTick = r.tick.replace(/'/g,"\\'");
+
+    const prStr = r.price==null
+      ? '<span class="sk" style="width:50px"></span>'
+      : fmt(r.price)+(r.cur?'<span class="cur">'+r.cur+'</span>':'');
+
+    const tgtStr = r.target!=null
+      ? fmt(r.target)+(r.cur?'<span class="cur">'+r.cur+'</span>':'')
+      : '<span style="color:var(--ghost)">—</span>';
+
+    // Mini sparkline via quickchart using price vs 52w range
+    let chartHtml = '<span class="sk" style="width:100px;height:26px;display:block"></span>';
+    if (r.price!=null && r.high52!=null && r.low52!=null) {
+      // Build a simple 3-point line: low52, price, high52 relative position
+      const range = r.high52 - r.low52;
+      const pos = range>0 ? ((r.price-r.low52)/range) : 0.5;
+      const mid = r.low52 + range*pos;
+      const color = u!=null&&u>0 ? '%231a5c38' : '%237a1a1a';
+      const pts = encodeURIComponent(`[${r.low52},${mid},${r.price}]`);
+      chartHtml = `<img style="width:100px;height:26px;display:block" src="https://quickchart.io/chart?w=100&h=26&c=%7Btype%3A'sparkline'%2Cdata%3A%7Bdatasets%3A%5B%7Bdata%3A${pts}%2CborderColor%3A'${color}'%2CborderWidth%3A1.5%7D%5D%7D%7D&bkg=transparent" alt="">`;
+    }
+
+    return `<tr id="${rid}" class="${r.flag?'flagged':''}">
+      <td class="c-idx">${i+1}</td>
+      <td class="c-fdot">${r.flag?'<span class="flag-dot"></span>':''}</td>
+      <td class="c-tick">${r.tick}</td>
+      <td class="c-mkt"><span class="mkt-badge">${mflag(r.mkt)} ${r.mkt}</span></td>
+      <td class="c-name" title="${r.name||''}">${r.name||'<span class="sk" style="width:120px"></span>'}</td>
+      <td class="c-price">${prStr}</td>
+      <td class="c-tgt"><span class="tgt-span" onclick="editTarget('${safeTick}')">${tgtStr}</span></td>
+      <td class="c-up"><span class="pill ${uCl}">${uSt}</span></td>
+      <td class="c-high">${fmt(r.high52)}</td>
+      <td class="c-low">${fmt(r.low52)}</td>
+      <td class="c-chart">${chartHtml}</td>
+      <td class="c-flaginp"><input class="flag-inp" type="text" value="${(r.flag||'').replace(/"/g,'&quot;')}" placeholder="nota…" onchange="saveFlag('${safeTick}',this.value)"></td>
+    </tr>`;
+  }).join('');
+}
+
+// ── EDIT TARGET ──
+function editTarget(tick) {
+  const r = rows.find(x=>x.tick===tick); if(!r) return;
+  const rid='r_'+tick.replace(/[^a-zA-Z0-9]/g,'_');
+  const row=document.getElementById(rid); if(!row) return;
+  const span=row.querySelector('.tgt-span');
+  const inp=document.createElement('input');
+  inp.className='tgt-inp'; inp.type='text';
+  inp.value=r.target!=null?String(r.target).replace('.',','):'';
+  inp.placeholder='0,00';
+  span.replaceWith(inp); inp.focus(); inp.select();
+  const save=()=>{
+    const v=parseFloat(inp.value.replace(',','.'));
+    r.target=isNaN(v)?null:v;
+    const t=store.targets; t[tick]=r.target; store.targets=t;
+    updateStats(); render();
+  };
+  inp.addEventListener('blur',save);
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();save();}if(e.key==='Escape')render();});
+}
+
+// ── SAVE FLAG ──
+function saveFlag(tick,val) {
+  const r=rows.find(x=>x.tick===tick);
+  if(r) r.flag=val.trim();
+  const f=store.flags; f[tick]=val.trim(); store.flags=f;
+  // re-render just the row class
+  const rid='r_'+tick.replace(/[^a-zA-Z0-9]/g,'_');
+  const tr=document.getElementById(rid);
+  if(tr) tr.className=val.trim()?'flagged':'';
+  updateStats();
+}
+
+// ── EXPORT / IMPORT ──
+function doExport() {
+  const lines=['TICKER,TARGET'];
+  rows.forEach(r=>{if(r.target!=null)lines.push(r.tick+','+r.target);});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([lines.join('\n')],{type:'text/csv'}));
+  a.download='watchlist_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click(); toast('CSV exportado ✓');
+}
+function openImport(){document.getElementById('modal').style.display='flex';document.getElementById('csv-in').value='';}
+function doImport() {
+  const lines=document.getElementById('csv-in').value.trim().split('\n');
+  const t=store.targets; let n=0;
+  lines.forEach(ln=>{
+    const[tick,val]=ln.split(','); if(!tick||!val) return;
+    const v=parseFloat(val.trim().replace(',','.'));
+    if(isNaN(v)) return;
+    t[tick.trim()]=v;
+    const r=rows.find(x=>x.tick===tick.trim()); if(r) r.target=v; n++;
+  });
+  store.targets=t;
+  document.getElementById('modal').style.display='none';
+  updateStats(); render(); toast('✓ '+n+' objetivos importados');
+}
+
+// ── TOAST ──
+let _tt;
+function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(_tt);_tt=setTimeout(()=>el.classList.remove('show'),2800);}
+
+// ── INIT ──
+updateStats(); render(); loadSheet();
+</script>
+</body>
+</html>
