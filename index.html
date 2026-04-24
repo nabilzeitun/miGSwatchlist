@@ -200,7 +200,7 @@ html, body {
 }
 
 /* ── TABLE ── */
-table { width: 100%; border-collapse: collapse; min-width: 780px; }
+table { width: 100%; border-collapse: collapse; }
 
 thead th {
   position: sticky; top: 0; z-index: 10;
@@ -345,6 +345,48 @@ td {
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-thumb { background: var(--brd2); border-radius: 2px; }
 ::-webkit-scrollbar-track { background: transparent; }
+
+/* ── MOBILE RESPONSIVE ── */
+@media (max-width: 600px) {
+  :root { --bar-h: 42px; }
+
+  /* Bar: tighter */
+  #bar { padding: 0 8px; gap: 3px; }
+  .bsep { margin: 0 1px; }
+  .statbtn { padding: 2px 7px; height: 32px; min-width: 38px; }
+  .stat-l { font-size: 8px; }
+  .stat-v { font-size: 12px; }
+  .mktbtn { width: 30px; height: 30px; }
+  .search-input { width: 80px; font-size: 11px; }
+  .search-input:focus { width: 110px; }
+  .fx-chip { padding: 2px 5px; height: 30px; min-width: 36px; }
+  .fx-lbl { font-size: 7.5px; }
+  .fx-val { font-size: 10px; }
+  #last-upd { font-size: 8px; }
+  .btn-reload svg { width: 12px; height: 12px; }
+
+  /* Hide less critical columns on mobile */
+  .col-empresa, th.col-empresa { display: none; }
+  .col-objetivo, th.col-objetivo { display: none; }
+  .col-52w, th.col-52w { display: none; }
+
+  /* Compact table */
+  td { padding: 5px 6px; font-size: 11.5px; }
+  thead th { padding: 5px 6px; font-size: 9.5px; }
+  .ci { width: 20px; padding-right: 2px; font-size: 10px; }
+  .ctk { font-size: 12px; }
+  .cmkt { width: 52px; }
+  .mbadge { font-size: 9.5px; padding: 1px 4px; }
+  .cpr, .ctg, .cup, .cdchg { min-width: 44px; }
+  .num { font-size: 11px; }
+  .pill { font-size: 10px; padding: 1px 5px; min-width: 44px; }
+  .cfl { width: 20px; }
+  .bfl { font-size: 11px; }
+  .c52 { width: 80px; }
+
+  /* FX bar: scroll silently */
+  #fx-bar { gap: 2px; }
+}
 </style>
 </head>
 <body>
@@ -422,12 +464,12 @@ td {
         <th class="cfl" onclick="sortBy('flag')">🔥</th>
         <th class="l" onclick="sortBy('tick')">Ticker</th>
         <th class="l" onclick="sortBy('mkt')">Mercado</th>
-        <th class="l">Empresa</th>
+        <th class="l col-empresa">Empresa</th>
         <th class="r" onclick="sortBy('price')">Precio</th>
-        <th class="r" onclick="sortBy('target')">Objetivo</th>
+        <th class="r col-objetivo" onclick="sortBy('target')">Objetivo</th>
         <th class="r sorted" id="th-up" onclick="sortBy('upside')">MoS</th>
         <th class="r" onclick="sortBy('daychg')">Día %</th>
-        <th class="r" onclick="sortBy('range52')">52W Range</th>
+        <th class="r col-52w" onclick="sortBy('range52')">52W Range</th>
       </tr>
     </thead>
     <tbody id="tbody"></tbody>
@@ -866,12 +908,12 @@ function render(){
       <td class="cfl"><span class="bfl ${r.flag?'on':''}">🔥</span></td>
       <td class="ctk">${r.tick}</td>
       <td class="cmkt"><span class="mbadge ${isMarketOpen(r.mkt)?'open':'closed'}">${MF[r.mkt]||r.mkt}</span></td>
-      <td class="cnm" title="${r.name||''}">${nmStr}</td>
+      <td class="cnm col-empresa" title="${r.name||''}">${nmStr}</td>
       <td class="cpr">${prStr}</td>
-      <td class="ctg">${tgtStr}</td>
+      <td class="ctg col-objetivo">${tgtStr}</td>
       <td class="cup"><span ${pillInline}>${uSt}</span></td>
       <td class="cdchg">${dayChgStr(r)}</td>
-      <td class="c52">${range52svg(r)}</td>
+      <td class="c52 col-52w">${range52svg(r)}</td>
     </tr>`;
   }).join('');
 }
@@ -885,6 +927,6 @@ function toast(msg){const el=document.getElementById('toast');el.textContent=msg
 // ── INIT ──
 updateStats(); render(); loadSheet(); loadFX();
 </script>
-<div id="ver">v0.38</div>
+<div id="ver">v0.39</div>
 </body>
 </html>
