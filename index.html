@@ -148,8 +148,16 @@ html, body {
 .search-input::placeholder { color: var(--lbl); }
 
 /* ── RELOAD ── */
-.bar-right { margin-left: auto; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.bar-right { margin-left: auto; display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
 #last-upd { font-size: 10px; color: var(--lbl); font-variant-numeric: tabular-nums; white-space: nowrap; }
+#fx-bar { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.fx-chip { display: flex; align-items: baseline; gap: 4px; flex-shrink: 0; }
+.fx-lbl { font-size: 9px; font-weight: 600; color: var(--lbl); text-transform: uppercase; letter-spacing: .04em; }
+.fx-val { font-family: var(--fnum); font-size: 12px; font-weight: 600; color: var(--txt2); font-variant-numeric: tabular-nums; }
+.vix-high { color: var(--dn); }
+.vix-mid  { color: #b8860b; }
+.vix-low  { color: var(--up); }
+.fx-sep { width: 1px; height: 14px; background: var(--brd2); flex-shrink: 0; }
 .btn-reload {
   background: none; border: none; cursor: pointer;
   color: var(--lbl); display: flex; align-items: center;
@@ -359,6 +367,20 @@ td {
   </button>
 
   <!-- reload right -->
+  <!-- FX rates + VIX -->
+  <div class="bsep"></div>
+  <div id="fx-bar">
+    <div class="fx-chip"><span class="fx-lbl">EUR/USD</span><span class="fx-val" id="fx-eurusd">—</span></div>
+    <span class="fx-sep"></span>
+    <div class="fx-chip"><span class="fx-lbl">EUR/GBP</span><span class="fx-val" id="fx-eurgbp">—</span></div>
+    <span class="fx-sep"></span>
+    <div class="fx-chip"><span class="fx-lbl">EUR/HKD</span><span class="fx-val" id="fx-eurhkd">—</span></div>
+    <span class="fx-sep"></span>
+    <div class="fx-chip"><span class="fx-lbl">EUR/AUD</span><span class="fx-val" id="fx-euraud">—</span></div>
+    <span class="fx-sep"></span>
+    <div class="fx-chip"><span class="fx-lbl">VIX</span><span class="fx-val" id="fx-vix">—</span></div>
+  </div>
+
   <div class="bar-right">
     <span id="last-upd"></span>
     <button class="btn-reload" id="btn-reload" onclick="manualReload()" title="Actualizar">
@@ -396,7 +418,8 @@ td {
 
 <script>
 const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQhCXI4uXagUPUSv-QomsWuEoCDHlFlxzrFTXSgi9aQ8Oy1sEacerfIdKxPGZdm1VJw-P1PzNQH5Q3_/pub?gid=0&single=true&output=csv';
-const REFRESH_MS = 60000; // auto-refresh every 60 seconds
+const FX_URL  = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQhCXI4uXagUPUSv-QomsWuEoCDHlFlxzrFTXSgi9aQ8Oy1sEacerfIdKxPGZdm1VJw-P1PzNQH5Q3_/pub?gid=1216010991&single=true&output=csv';
+const REFRESH_MS = 30000; // auto-refresh every 30 seconds
 
 
 const MF={NASDAQ:'NASDAQ',NYSE:'NYSE',US:'NYSE',OTC:'OTC',BME:'BME',LON:'LON',
@@ -478,10 +501,49 @@ async function loadSheet(silent=false){
   btn.innerHTML=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 12a9 9 0 019-9 9.75 9.75 0 016.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 01-9 9 9.75 9.75 0 01-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>`;
   _loading=false;
 }
-function manualReload(){ loadSheet(false); }
+function manualReload(){ loadSheet(false); loadFX(); }
+
+async function loadFX() {
+  try {
+    const res = await fetch(FX_URL + '&t=' + Date.now());
+    if (!res.ok) return;
+    const lines = (await res.text()).trim().split('\n');
+    const data = {};
+    lines.forEach(line => {
+      const cols = line.split(',');
+      if (cols.length >= 2) {
+        const key = cols[0].trim().toUpperCase();
+        const val = parseNum(cols[1]);
+        if (key && val !== null) data[key] = val;
+      }
+    });
+
+    const set = (id, key, decimals=4) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const v = data[key];
+      el.textContent = v != null ? v.toFixed(decimals) : '—';
+    };
+
+    set('fx-eurusd', 'EURUSD', 4);
+    set('fx-eurgbp', 'EURGBP', 4);
+    set('fx-eurhkd', 'EURHKD', 4);
+    set('fx-euraud', 'EURAUD', 4);
+
+    // VIX with color coding: <15 low (green), 15-25 mid (orange), >25 high (red)
+    const vixEl = document.getElementById('fx-vix');
+    const vix = data['VIX'];
+    if (vixEl && vix != null) {
+      vixEl.textContent = vix.toFixed(2);
+      vixEl.className = 'fx-val ' + (vix > 30 ? 'vix-high' : vix >= 20 ? 'vix-mid' : 'vix-low');
+    }
+  } catch(e) {
+    console.warn('FX load error:', e);
+  }
+}
 
 // Auto-refresh
-setInterval(()=>loadSheet(true), REFRESH_MS);
+setInterval(()=>{ loadSheet(true); loadFX(); }, REFRESH_MS);
 
 // ── STATS ──
 function updateStats(){
@@ -740,7 +802,7 @@ let _tt;
 function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(_tt);_tt=setTimeout(()=>el.classList.remove('show'),2400);}
 
 // ── INIT ──
-updateStats(); render(); loadSheet();
+updateStats(); render(); loadSheet(); loadFX();
 </script>
 </body>
 </html>
