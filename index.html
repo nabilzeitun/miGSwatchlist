@@ -283,10 +283,10 @@ td {
 .cdchg { text-align: right; }
 .c52  { text-align: right; width: 140px; }
 .num  { font-family: var(--fnum); font-size: 12px; font-variant-numeric: tabular-nums; }
-.cur  { font-size: 9px; color: var(--lbl); margin-left: 2px; }
+.cur  { font-size: .75em; color: var(--lbl); margin-left: 2px; vertical-align: baseline; }
 
 /* tgt: non-editable, just plain */
-.ctg span { font-family: var(--fnum); font-size: 12px; font-variant-numeric: tabular-nums; }
+.ctg .num { font-family: var(--fnum); font-size: 12px; font-variant-numeric: tabular-nums; }
 
 /* MoS pill */
 .pill {
@@ -894,10 +894,10 @@ function render(){
 
     const prStr=r.price==null
       ?'<span class="sk" style="width:46px;height:12px"></span>'
-      :`<span class="num">${fmt(r.price)}</span>${r.cur?`<span class="cur">${r.cur}</span>`:''}`;
+      :`<span class="num">${fmt(r.price)}${r.cur?`<span class="cur">${r.cur}</span>`:''}</span>`;
 
     const tgtStr=r.target!=null
-      ?`<span class="num">${fmt(r.target)}</span>${r.cur?`<span class="cur">${r.cur}</span>`:''}`
+      ?`<span class="num">${fmt(r.target)}${r.cur?`<span class="cur">${r.cur}</span>`:''}</span>`
       :'<span style="color:var(--lbl)">—</span>';
 
     const nmStr=r.name||(r.price==null?'<span class="sk" style="width:100px;height:12px"></span>':'—');
@@ -927,6 +927,6 @@ function toast(msg){const el=document.getElementById('toast');el.textContent=msg
 // ── INIT ──
 updateStats(); render(); loadSheet(); loadFX();
 </script>
-<div id="ver">v0.40</div>
+<div id="ver">v0.42</div>
 </body>
 </html>
