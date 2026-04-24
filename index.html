@@ -473,37 +473,38 @@ function range52svg(r){
 // Maps upside % to a red→orange→yellow→green color scale
 function pillStyle(u) {
   if (u == null) return {bg:'var(--sur2)', color:'var(--lbl)'};
-  // Clamp to [-40, +40] for color mapping
-  const clamped = Math.max(-40, Math.min(40, u));
-  // 0 = fully red (u<=-40), 0.5 = yellow (u=0), 1 = fully green (u>=40)
-  const t = (clamped + 40) / 80;
 
-  // Interpolate through: red → orange → yellow → lime → green
-  // Stops: 0→#e74c3c, 0.35→#e67e22, 0.5→#f1c40f, 0.65→#a8d08d, 1→#1d6f42
   let cr, cg, cb;
-  if (t < 0.35) {
-    const s = t / 0.35;
-    cr = Math.round(231 + (230-231)*s);
-    cg = Math.round(76  + (126-76)*s);
-    cb = Math.round(60  + (34-60)*s);
-  } else if (t < 0.5) {
-    const s = (t-0.35)/0.15;
-    cr = Math.round(230 + (241-230)*s);
-    cg = Math.round(126 + (196-126)*s);
-    cb = Math.round(34  + (15-34)*s);
-  } else if (t < 0.65) {
-    const s = (t-0.5)/0.15;
-    cr = Math.round(241 + (168-241)*s);
-    cg = Math.round(196 + (208-196)*s);
-    cb = Math.round(15  + (141-15)*s);
+
+  if (u >= 0) {
+    // BARATAS: amarillo claro (u~0) → verde intenso (u>=40)
+    // u=0  → rgb(180,210,100) amarillo-verde claro
+    // u=40 → rgb(29,111,66)   verde intenso
+    const t = Math.min(1, u / 40); // 0..1
+    cr = Math.round(180 + (29  - 180) * t);
+    cg = Math.round(210 + (111 - 210) * t);
+    cb = Math.round(100 + (66  - 100) * t);
   } else {
-    const s = (t-0.65)/0.35;
-    cr = Math.round(168 + (29-168)*s);
-    cg = Math.round(208 + (111-208)*s);
-    cb = Math.round(141 + (66-141)*s);
+    // CARAS: amarillo (u~0) → naranja → rojo intenso (u<=-40)
+    // u=0   → rgb(241,196,15)  amarillo
+    // u=-20 → rgb(230,126,34)  naranja
+    // u=-40 → rgb(192,57,43)   rojo
+    const t = Math.min(1, Math.abs(u) / 40); // 0..1
+    if (t < 0.5) {
+      const s = t / 0.5;
+      cr = Math.round(241 + (230 - 241) * s);
+      cg = Math.round(196 + (126 - 196) * s);
+      cb = Math.round(15  + (34  - 15)  * s);
+    } else {
+      const s = (t - 0.5) / 0.5;
+      cr = Math.round(230 + (192 - 230) * s);
+      cg = Math.round(126 + (57  - 126) * s);
+      cb = Math.round(34  + (43  - 34)  * s);
+    }
   }
-  const bg = `rgba(${cr},${cg},${cb},0.18)`;
-  const color = `rgb(${Math.round(cr*0.6)},${Math.round(cg*0.6)},${Math.round(cb*0.6)})`;
+
+  const bg    = `rgba(${cr},${cg},${cb},0.18)`;
+  const color = `rgb(${Math.round(cr*0.55)},${Math.round(cg*0.55)},${Math.round(cb*0.55)})`;
   return {bg, color};
 }
 
