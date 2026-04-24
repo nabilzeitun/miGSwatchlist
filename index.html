@@ -329,7 +329,7 @@ function splitLine(line){
 function parseCSV(text){
   const lines=text.trim().split('\n');
   if(lines.length<2) return [];
-  const T=store.targets, F=store.flags, out=[];
+  const out=[];
   for(let i=1;i<lines.length;i++){
     const c=splitLine(lines[i]);
     if(c.length<5) continue;
