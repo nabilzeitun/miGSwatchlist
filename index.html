@@ -522,13 +522,28 @@ async function loadFX() {
     const lines = (await res.text()).trim().split('\n');
     const data = {};
     lines.forEach(line => {
-      // Google Sheets may use comma or semicolon as CSV separator
-      const cols = line.includes(';') ? line.split(';') : line.split(',');
-      if (cols.length >= 2) {
-        const key = cols[0].trim().replace(/^"|"$/g,'').toUpperCase();
+      if (!line.trim()) return;
+      // Google Sheets CSV with European locale: comma is decimal separator
+      // Format can be: EURUSD,1,17205  (key=EURUSD, value=1.17205 split across cols)
+      // Or quoted:     "EURUSD","1,17205"
+      // Strategy: first token is key, rest joined with comma = number string
+      const stripped = line.replace(/\r/g,'');
+      // Try semicolon first (some locales use ; as CSV separator)
+      if (stripped.includes(';')) {
+        const cols = stripped.split(';');
+        const key = cols[0].replace(/^"|"$/g,'').trim().toUpperCase();
         const val = parseNum(cols[1]);
         if (key && val !== null) data[key] = val;
+        return;
       }
+      // Comma-separated: first comma separates key from value
+      const firstComma = stripped.indexOf(',');
+      if (firstComma === -1) return;
+      const key = stripped.slice(0, firstComma).replace(/^"|"$/g,'').trim().toUpperCase();
+      // Value: everything after first comma, with commas as decimal
+      const rawVal = stripped.slice(firstComma + 1).replace(/^"|"$/g,'').trim();
+      const val = parseNum(rawVal);
+      if (key && val !== null) data[key] = val;
     });
 
     const set = (id, key, decimals=4) => {
@@ -737,7 +752,7 @@ function pillStyle(u) {
 function dayChgStr(r) {
   if (r.dayChg == null) return '<span style="color:var(--lbl)">—</span>';
   const v   = r.dayChg;
-  const str = (v >= 0 ? '+' : '') + v.toFixed(2) + '%';
+  const str = (v >= 0 ? '+' : '') + v.toFixed(1) + '%';
   const col = v > 0 ? 'var(--up)' : v < 0 ? 'var(--dn)' : 'var(--lbl)';
   return `<span class="num" style="color:${col}">${str}</span>`;
 }
