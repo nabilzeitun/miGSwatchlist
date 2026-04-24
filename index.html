@@ -4,178 +4,328 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Watchlist</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Playfair+Display:ital,wght@0,700;1,500&display=swap" rel="stylesheet">
 <style>
+/* ── RESET & BASE ── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
 :root {
-  --ink:    #0f0e0c;
-  --paper:  #f5f2eb;
-  --paper2: #edeae1;
-  --rule:   #d8d3c8;
-  --rule2:  #c8c2b5;
-  --muted:  #9a9385;
-  --ghost:  #b8b2a7;
-  --up:     #1a5c38;
-  --up-bg:  #e8f4ee;
-  --dn:     #7a1a1a;
-  --dn-bg:  #f4e8e8;
-  --flag:   #b8420a;
-  --flag-bg:#fdf0e8;
-  --mono:'DM Mono',monospace;
-  --serif:'Playfair Display',serif;
+  --bg:       #f2f2f7;
+  --surface:  #ffffff;
+  --surface2: #f2f2f7;
+  --border:   #e5e5ea;
+  --border2:  #d1d1d6;
+  --label:    #8e8e93;
+  --text:     #1c1c1e;
+  --text2:    #3a3a3c;
+  --text3:    #636366;
+  --up:       #1d6f42;
+  --up-bg:    #f0faf4;
+  --up-pill:  #d1eedc;
+  --dn:       #c0392b;
+  --dn-bg:    #fdf3f2;
+  --dn-pill:  #fad7d3;
+  --flag:     #e65c00;
+  --flag-bg:  #fff5ee;
+  --blue:     #007aff;
+  --radius:   10px;
+  --font:     -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', system-ui, sans-serif;
+  --font-num: 'SF Mono', 'Menlo', 'Consolas', monospace;
 }
-*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
-html{font-size:13px;}
-body{background:var(--paper);color:var(--ink);font-family:var(--mono);min-height:100vh;}
 
-#topbar{position:fixed;top:0;left:0;right:0;z-index:200;height:54px;background:var(--ink);
-  display:flex;align-items:center;justify-content:space-between;padding:0 24px;}
-.brand{display:flex;align-items:baseline;gap:12px;}
-.brand-name{font-family:var(--serif);font-style:italic;font-size:1.15rem;color:var(--paper);}
-.brand-sub{font-size:.58rem;color:var(--muted);letter-spacing:.15em;text-transform:uppercase;}
-.top-right{display:flex;align-items:center;gap:16px;}
-#last-upd{font-size:.58rem;color:var(--muted);letter-spacing:.08em;}
-.btn-reload{background:none;border:1px solid #3a3830;color:var(--ghost);font-family:var(--mono);
-  font-size:.65rem;padding:5px 12px;cursor:pointer;letter-spacing:.08em;text-transform:uppercase;
-  transition:all .15s;display:flex;align-items:center;gap:6px;}
-.btn-reload:hover{border-color:var(--paper);color:var(--paper);}
-.btn-reload:disabled{opacity:.35;cursor:not-allowed;}
-.spin{display:inline-block;width:10px;height:10px;border:1.5px solid rgba(255,255,255,.2);
-  border-top-color:rgba(255,255,255,.7);border-radius:50%;animation:ro .6s linear infinite;}
-@keyframes ro{to{transform:rotate(360deg);}}
+html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font); font-size: 13px; -webkit-font-smoothing: antialiased; }
 
-#statsbar{position:fixed;top:54px;left:0;right:0;z-index:199;height:44px;
-  background:var(--paper2);border-bottom:1px solid var(--rule);
-  display:flex;align-items:center;padding:0 24px;gap:32px;overflow-x:auto;}
-.stat{display:flex;flex-direction:column;gap:1px;flex-shrink:0;}
-.stat-l{font-size:.52rem;text-transform:uppercase;letter-spacing:.12em;color:var(--ghost);}
-.stat-v{font-size:.8rem;font-weight:500;}
-.stat-v.up{color:var(--up);}.stat-v.dn{color:var(--dn);}
+/* ── TOPBAR ── */
+#topbar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 300;
+  height: 52px;
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 20px;
+}
+.topbar-left  { display: flex; align-items: center; gap: 12px; }
+.topbar-right { display: flex; align-items: center; gap: 10px; }
+#last-upd { font-size: 11px; color: var(--label); }
 
-#toolbar{position:fixed;top:98px;left:0;right:0;z-index:198;background:var(--paper);
-  border-bottom:1px solid var(--rule);display:flex;align-items:center;gap:10px;
-  padding:8px 24px;flex-wrap:wrap;}
-.search-wrap{position:relative;flex:1;min-width:180px;max-width:300px;}
-.search-wrap svg{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--ghost);pointer-events:none;}
-input[type=text]{width:100%;background:var(--paper2);border:1px solid var(--rule2);
-  color:var(--ink);font-family:var(--mono);font-size:.75rem;padding:6px 10px;
-  outline:none;transition:border-color .15s;}
-input[type=text]:focus{border-color:var(--ink);}
-input[type=text]::placeholder{color:var(--ghost);}
-.search-wrap input{padding-left:28px;}
-.sep{width:1px;height:22px;background:var(--rule2);flex-shrink:0;}
-.btn-sm{background:var(--paper2);border:1px solid var(--rule2);color:var(--muted);
-  font-family:var(--mono);font-size:.62rem;padding:6px 11px;cursor:pointer;
-  letter-spacing:.06em;text-transform:uppercase;display:flex;align-items:center;gap:5px;
-  transition:all .15s;white-space:nowrap;flex-shrink:0;}
-.btn-sm:hover{border-color:var(--ink);color:var(--ink);}
-.filter-group{display:flex;gap:4px;flex-shrink:0;}
-.fbtn{background:none;border:1px solid var(--rule2);color:var(--ghost);font-family:var(--mono);
-  font-size:.6rem;padding:5px 10px;cursor:pointer;letter-spacing:.06em;text-transform:uppercase;transition:all .15s;}
-.fbtn:hover,.fbtn.active{background:var(--ink);border-color:var(--ink);color:var(--paper);}
+.btn-icon {
+  background: var(--surface2);
+  border: none;
+  border-radius: 8px;
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  color: var(--blue);
+  transition: background .15s;
+}
+.btn-icon:hover  { background: var(--border); }
+.btn-icon:disabled { opacity: .4; cursor: not-allowed; }
+.spin { width: 14px; height: 14px; border: 2px solid var(--border2); border-top-color: var(--blue); border-radius: 50%; animation: ro .7s linear infinite; }
+@keyframes ro { to { transform: rotate(360deg); } }
 
-#scroll{position:fixed;top:142px;left:0;right:0;bottom:0;overflow:auto;-webkit-overflow-scrolling:touch;}
+/* ── STATSBAR ── */
+#statsbar {
+  position: fixed; top: 52px; left: 0; right: 0; z-index: 299;
+  height: 48px;
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center;
+  padding: 0 20px; gap: 28px;
+  overflow-x: auto;
+}
+.stat { display: flex; flex-direction: column; gap: 1px; flex-shrink: 0; }
+.stat-l { font-size: 10px; color: var(--label); font-weight: 500; letter-spacing: .02em; }
+.stat-v { font-size: 13px; font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; }
+.stat-v.up { color: var(--up); }
+.stat-v.dn { color: var(--dn); }
 
-table{width:100%;border-collapse:collapse;min-width:920px;}
-thead th{position:sticky;top:0;z-index:10;background:var(--paper2);padding:7px 14px;
-  text-align:left;font-size:.53rem;text-transform:uppercase;letter-spacing:.12em;
-  color:var(--ghost);font-weight:400;border-bottom:2px solid var(--rule2);
-  white-space:nowrap;cursor:pointer;user-select:none;transition:color .15s;}
-thead th:hover{color:var(--ink);}
-thead th.r{text-align:right;}
-thead th.sorted{color:var(--ink);}
-thead th.sorted::after{content:' ↓';font-size:.5rem;}
-thead th.sorted.asc::after{content:' ↑';}
-tbody tr{border-bottom:1px solid var(--rule);transition:background .08s;}
-tbody tr:last-child{border-bottom:none;}
-tbody tr:hover{background:var(--paper2);}
-tbody tr.flagged{background:var(--flag-bg);}
-tbody tr.flagged:hover{background:#fce8d8;}
-td{padding:8px 14px;vertical-align:middle;}
+/* ── TOOLBAR ── */
+#toolbar {
+  position: fixed; top: 100px; left: 0; right: 0; z-index: 298;
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 20px;
+  flex-wrap: wrap;
+  min-height: 48px;
+}
 
-.c-idx{color:var(--ghost);font-size:.62rem;text-align:right;width:32px;padding-right:8px;}
-.c-tick{font-weight:500;font-size:.85rem;letter-spacing:.03em;white-space:nowrap;}
-.c-mkt{width:90px;}
-.mkt-badge{display:inline-block;padding:2px 6px;background:var(--paper2);
-  border:1px solid var(--rule2);font-size:.54rem;letter-spacing:.06em;color:var(--muted);}
-.c-name{color:var(--muted);font-size:.72rem;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.c-price{text-align:right;font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap;}
-.cur{font-size:.56rem;color:var(--ghost);margin-left:3px;}
-.c-tgt{text-align:right;}
-.tgt-span{font-variant-numeric:tabular-nums;cursor:pointer;padding:3px 6px;
-  border:1px dashed transparent;transition:all .15s;font-size:.8rem;white-space:nowrap;display:inline-block;}
-.tgt-span:hover{border-color:var(--rule2);background:var(--paper2);}
-.tgt-inp{width:82px;text-align:right;background:var(--paper2);border:1px solid var(--ink);
-  font-family:var(--mono);font-size:.8rem;color:var(--ink);padding:3px 6px;outline:none;}
-.c-up{text-align:right;}
-.pill{display:inline-block;padding:3px 8px;font-size:.7rem;font-weight:500;
-  font-variant-numeric:tabular-nums;min-width:64px;text-align:center;}
-.pill.up{background:var(--up-bg);color:var(--up);}
-.pill.dn{background:var(--dn-bg);color:var(--dn);}
-.pill.nt{background:var(--paper2);color:var(--ghost);}
-.c-high,.c-low{text-align:right;font-variant-numeric:tabular-nums;font-size:.75rem;color:var(--muted);white-space:nowrap;}
-.c-chart{width:110px;}
-.c-flag{width:48px;text-align:center;}
+/* Search */
+.search-wrap { position: relative; flex: 1; min-width: 160px; max-width: 260px; }
+.search-wrap svg { position: absolute; left: 9px; top: 50%; transform: translateY(-50%); color: var(--label); pointer-events: none; }
+.search-input {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 13px;
+  padding: 6px 10px 6px 30px;
+  outline: none;
+  transition: border-color .15s, background .15s;
+}
+.search-input:focus { background: var(--surface); border-color: var(--blue); }
+.search-input::placeholder { color: var(--label); }
 
-/* Flag toggle button */
-.btn-flag{background:none;border:none;cursor:pointer;font-size:1.1rem;
-  opacity:.2;transition:opacity .15s transform .1s;padding:2px 6px;line-height:1;}
-.btn-flag:hover{opacity:.5;}
-.btn-flag.on{opacity:1;transform:scale(1.15);}
+/* Filter pills */
+.filter-group { display: flex; gap: 4px; flex-wrap: wrap; }
+.fpill {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  color: var(--text2);
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all .15s;
+  flex-shrink: 0;
+}
+.fpill:hover { background: var(--border); }
+.fpill.active { background: var(--blue); border-color: var(--blue); color: #fff; }
 
-.sk{display:inline-block;height:10px;border-radius:2px;
-  background:linear-gradient(90deg,var(--rule) 25%,var(--paper2) 50%,var(--rule) 75%);
-  background-size:200% 100%;animation:sh 1.3s infinite;}
-@keyframes sh{0%{background-position:200% 0}100%{background-position:-200% 0}}
-.row-empty td{padding:60px;text-align:center;color:var(--ghost);font-size:.8rem;}
+/* ── SCROLL ── */
+#scroll {
+  position: fixed;
+  top: 148px; left: 0; right: 0; bottom: 0;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
 
-.overlay{position:fixed;inset:0;background:rgba(15,14,12,.5);z-index:500;
-  display:flex;align-items:center;justify-content:center;padding:20px;}
-.modal{background:var(--paper);border:1px solid var(--rule2);padding:28px;
-  max-width:440px;width:100%;box-shadow:0 24px 64px rgba(0,0,0,.15);}
-.modal h3{font-family:var(--serif);font-style:italic;font-size:1.1rem;margin-bottom:8px;}
-.modal p{font-size:.7rem;color:var(--muted);margin-bottom:14px;line-height:1.7;}
-.modal textarea{width:100%;height:150px;background:var(--paper2);border:1px solid var(--rule2);
-  font-family:var(--mono);font-size:.68rem;color:var(--ink);padding:10px;outline:none;resize:vertical;margin-bottom:12px;}
-.modal-btns{display:flex;gap:8px;justify-content:flex-end;}
-.mbtn{background:var(--paper2);border:1px solid var(--rule2);color:var(--muted);
-  font-family:var(--mono);font-size:.68rem;padding:7px 16px;cursor:pointer;
-  letter-spacing:.06em;text-transform:uppercase;transition:all .15s;}
-.mbtn:hover{border-color:var(--ink);color:var(--ink);}
-.mbtn.primary{background:var(--ink);color:var(--paper);border-color:var(--ink);}
-.mbtn.primary:hover{opacity:.85;}
+/* ── TABLE ── */
+table { width: 100%; border-collapse: collapse; min-width: 860px; }
 
-#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(60px);
-  background:var(--ink);color:var(--paper);padding:8px 20px;font-size:.7rem;
-  letter-spacing:.06em;z-index:600;pointer-events:none;
-  transition:transform .25s cubic-bezier(.34,1.56,.64,1);}
-#toast.show{transform:translateX(-50%) translateY(0);}
+thead th {
+  position: sticky; top: 0; z-index: 10;
+  background: var(--surface);
+  padding: 8px 14px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--label);
+  letter-spacing: .02em;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  transition: color .15s;
+}
+thead th:hover { color: var(--text2); }
+thead th.r { text-align: right; }
+thead th.sorted { color: var(--blue); }
+thead th.sorted::after { content: ' ↓'; font-size: 10px; }
+thead th.sorted.asc::after { content: ' ↑'; }
 
-::-webkit-scrollbar{width:4px;height:4px;}
-::-webkit-scrollbar-track{background:transparent;}
-::-webkit-scrollbar-thumb{background:var(--rule2);}
-@media(max-width:640px){.brand-sub,#last-upd,.c-name{display:none;}}
+tbody tr {
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  transition: background .1s;
+}
+tbody tr:hover { background: #f8f8fa; }
+tbody tr.flagged { background: var(--flag-bg); }
+tbody tr.flagged:hover { background: #fff0e6; }
+tbody tr.unloaded { opacity: .55; }
+
+td {
+  padding: 10px 14px;
+  vertical-align: middle;
+  font-size: 13px;
+  color: var(--text);
+}
+
+/* ── CELL STYLES — all uniform 13px ── */
+.c-idx   { font-size: 12px; color: var(--label); text-align: right; width: 36px; padding-right: 6px; font-variant-numeric: tabular-nums; }
+.c-tick  { font-weight: 600; font-size: 13px; white-space: nowrap; letter-spacing: .01em; }
+.c-mkt   { width: 80px; }
+
+.mkt-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text3);
+  padding: 2px 7px;
+}
+
+.c-name {
+  font-size: 13px;
+  color: var(--text3);
+  max-width: 190px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.c-price, .c-tgt, .c-up, .c-high, .c-low {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+}
+
+.num { font-family: var(--font-num); font-size: 12.5px; }
+.cur { font-size: 10px; color: var(--label); margin-left: 2px; }
+
+/* Target editable */
+.tgt-span {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 5px;
+  border: 1px dashed transparent;
+  cursor: pointer;
+  transition: all .15s;
+  font-family: var(--font-num);
+  font-size: 12.5px;
+}
+.tgt-span:hover { border-color: var(--border2); background: var(--surface2); }
+.tgt-inp {
+  width: 80px; text-align: right;
+  background: var(--surface); border: 1.5px solid var(--blue);
+  border-radius: 6px;
+  font-family: var(--font-num); font-size: 12.5px; color: var(--text);
+  padding: 2px 6px; outline: none;
+}
+
+/* Upside pill */
+.pill {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  min-width: 60px;
+  text-align: center;
+}
+.pill.up { background: var(--up-pill); color: var(--up); }
+.pill.dn { background: var(--dn-pill); color: var(--dn); }
+.pill.nt { background: var(--surface2); color: var(--label); }
+
+/* 52w chart column */
+.c-chart { width: 112px; }
+
+/* Flag toggle */
+.c-flag { width: 40px; text-align: center; }
+.btn-flag {
+  background: none; border: none; cursor: pointer;
+  font-size: 15px; line-height: 1; padding: 3px;
+  opacity: .2; transition: opacity .15s, transform .1s;
+  border-radius: 6px;
+}
+.btn-flag:hover { opacity: .5; background: var(--surface2); }
+.btn-flag.on { opacity: 1; transform: scale(1.1); }
+
+/* Skeleton */
+.sk {
+  display: inline-block; border-radius: 4px; vertical-align: middle;
+  background: linear-gradient(90deg, var(--border) 25%, var(--surface2) 50%, var(--border) 75%);
+  background-size: 200% 100%;
+  animation: sh 1.2s infinite;
+}
+@keyframes sh { 0%{ background-position: 200% 0 } 100%{ background-position: -200% 0 } }
+
+.row-empty td { padding: 64px; text-align: center; color: var(--label); font-size: 14px; }
+
+/* Toast */
+#toast {
+  position: fixed; bottom: 24px; left: 50%;
+  transform: translateX(-50%) translateY(60px);
+  background: rgba(28,28,30,.92);
+  color: #fff;
+  padding: 9px 20px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  z-index: 600;
+  pointer-events: none;
+  transition: transform .25s cubic-bezier(.34,1.56,.64,1);
+  backdrop-filter: blur(10px);
+}
+#toast.show { transform: translateX(-50%) translateY(0); }
+
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+::-webkit-scrollbar-track { background: transparent; }
+
+@media (max-width: 640px) {
+  .c-name, #last-upd { display: none; }
+  #scroll { top: 148px; }
+}
 </style>
 </head>
 <body>
 
+<!-- TOPBAR -->
 <div id="topbar">
-  <div class="brand">
-    <span class="brand-name">Watchlist</span>
-    <span class="brand-sub">Portfolio Tracker</span>
+  <div class="topbar-left">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#007aff" stroke-width="2">
+      <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+    </svg>
+    <span style="font-size:15px;font-weight:600;color:var(--text)">Watchlist</span>
   </div>
-  <div class="top-right">
+  <div class="topbar-right">
     <span id="last-upd"></span>
-    <button class="btn-reload" id="btn-reload" onclick="loadSheet()">
-      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+    <button class="btn-icon" id="btn-reload" onclick="loadSheet()" title="Actualizar">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
         <path d="M3 12a9 9 0 019-9 9.75 9.75 0 016.74 2.74L21 8"/>
-        <path d="M21 3v5h-5"/><path d="M21 12a9 9 0 01-9 9 9.75 9.75 0 01-6.74-2.74L3 16"/>
+        <path d="M21 3v5h-5"/>
+        <path d="M21 12a9 9 0 01-9 9 9.75 9.75 0 01-6.74-2.74L3 16"/>
         <path d="M8 16H3v5"/>
       </svg>
-      Actualizar
     </button>
   </div>
 </div>
 
+<!-- STATSBAR -->
 <div id="statsbar">
   <div class="stat"><span class="stat-l">Total</span><span class="stat-v" id="s-tot">—</span></div>
   <div class="stat"><span class="stat-l">Cargadas</span><span class="stat-v" id="s-ld">—</span></div>
@@ -184,22 +334,25 @@ td{padding:8px 14px;vertical-align:middle;}
   <div class="stat"><span class="stat-l">Upside medio</span><span class="stat-v" id="s-avg">—</span></div>
 </div>
 
+<!-- TOOLBAR -->
 <div id="toolbar">
   <div class="search-wrap">
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
       <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
     </svg>
-    <input type="text" id="q" placeholder="Buscar ticker, empresa, mercado…" oninput="render()">
+    <input class="search-input" type="text" id="q" placeholder="Buscar…" oninput="render()">
   </div>
   <div class="filter-group">
-    <button class="fbtn active" id="f-all"      onclick="setFilter('all')">Todas</button>
-    <button class="fbtn"        id="f-up"        onclick="setFilter('up')">Baratas</button>
-    <button class="fbtn"        id="f-dn"        onclick="setFilter('dn')">Caras</button>
-    <button class="fbtn"        id="f-flag"      onclick="setFilter('flag')">🔥 Destacadas</button>
-    <button class="fbtn"        id="f-up-flag"   onclick="setFilter('up-flag')">📈🔥 Baratas+Dest.</button>
+    <button class="fpill active" id="f-loaded"  onclick="setFilter('loaded')">Cargadas</button>
+    <button class="fpill"        id="f-all"     onclick="setFilter('all')">Todas</button>
+    <button class="fpill"        id="f-up"      onclick="setFilter('up')">Baratas</button>
+    <button class="fpill"        id="f-dn"      onclick="setFilter('dn')">Caras</button>
+    <button class="fpill"        id="f-flag"    onclick="setFilter('flag')">🔥 Destacadas</button>
+    <button class="fpill"        id="f-up-flag" onclick="setFilter('up-flag')">📈🔥 Baratas+Dest.</button>
   </div>
 </div>
 
+<!-- TABLE -->
 <div id="scroll">
   <table>
     <thead>
@@ -213,7 +366,7 @@ td{padding:8px 14px;vertical-align:middle;}
         <th class="r sorted" id="th-upside" onclick="sortBy('upside')">Upside %</th>
         <th class="r" onclick="sortBy('high52')">Máx 52s</th>
         <th class="r" onclick="sortBy('low52')">Mín 52s</th>
-        <th>Chart 52s</th>
+        <th onclick="sortBy('range52')">52W Relative</th>
         <th class="c-flag" onclick="sortBy('flag')" title="Destacadas">🔥</th>
       </tr>
     </thead>
@@ -221,13 +374,12 @@ td{padding:8px 14px;vertical-align:middle;}
   </table>
 </div>
 
-
 <div id="toast"></div>
 
 <script>
 const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQhCXI4uXagUPUSv-QomsWuEoCDHlFlxzrFTXSgi9aQ8Oy1sEacerfIdKxPGZdm1VJw-P1PzNQH5Q3_/pub?gid=0&single=true&output=csv';
 
-// ── PERSISTENT STORE ──
+// ── STORE ──
 const store = {
   get targets(){ try{return JSON.parse(localStorage.getItem('wl_targets')||'{}')}catch{return{}} },
   set targets(v){ localStorage.setItem('wl_targets',JSON.stringify(v)) },
@@ -235,63 +387,43 @@ const store = {
   set flags(v){ localStorage.setItem('wl_flags',JSON.stringify(v)) },
 };
 
-const MF = {NASDAQ:'🇺🇸',NYSE:'🇺🇸',US:'🇺🇸',OTC:'🇺🇸',BME:'🇪🇸',LON:'🇬🇧',
-            HKG:'🇭🇰',AMS:'🇳🇱',EPA:'🇫🇷',ETR:'🇩🇪',ASX:'🇦🇺',BIT:'🇮🇹',
-            VIE:'🇦🇹',FRA:'🇩🇪',SWX:'🇨🇭'};
+const MF = {
+  NASDAQ:'🇺🇸',NYSE:'🇺🇸',US:'🇺🇸',OTC:'🇺🇸',
+  BME:'🇪🇸',LON:'🇬🇧',HKG:'🇭🇰',AMS:'🇳🇱',
+  EPA:'🇫🇷',ETR:'🇩🇪',ASX:'🇦🇺',BIT:'🇮🇹',
+  VIE:'🇦🇹',FRA:'🇩🇪',SWX:'🇨🇭'
+};
 const mflag = m => MF[m] || '🌐';
 
 let rows = [];
 let sortKey = 'upside';
 let sortDir = -1;
-let filterMode = 'all';
+let filterMode = 'loaded';   // default: only loaded rows
 
 // ── PARSE NUMBER ──
-// Google Sheets CSV en español usa punto como separador de miles y coma como decimal
-// Ej: "1.234,56" → 1234.56  |  "29,00" → 29.00  |  "29.5" → 29.5
 function parseNum(s) {
   if (!s) return null;
-  s = s.trim().replace(/^"|"$/g, '');
-  if (!s || s === '#N/A' || s === '#REF!' || s === '#ERROR!' || s === '#VALUE!') return null;
-
-  // Detect format: if has both . and , → European (. = thousands, , = decimal)
-  const hasDot   = s.includes('.');
+  s = s.trim().replace(/^"|"$/g,'');
+  if (!s || ['#N/A','#REF!','#ERROR!','#VALUE!','#DIV/0!'].includes(s)) return null;
+  const hasDot = s.includes('.');
   const hasComma = s.includes(',');
-
-  let normalized;
-  if (hasDot && hasComma) {
-    // "1.234,56" → remove dots, replace comma with dot
-    normalized = s.replace(/\./g, '').replace(',', '.');
-  } else if (hasComma && !hasDot) {
-    // "29,00" → "29.00"
-    normalized = s.replace(',', '.');
-  } else {
-    // "29.5" or "29" — already OK
-    normalized = s;
-  }
-
-  const v = parseFloat(normalized);
+  let n;
+  if (hasDot && hasComma) n = s.replace(/\./g,'').replace(',','.');
+  else if (hasComma)      n = s.replace(',','.');
+  else                    n = s;
+  const v = parseFloat(n);
   return isNaN(v) ? null : v;
 }
 
-// ── PARSE CSV ──
-// Handles quoted fields that may contain commas
-function splitCSVLine(line) {
-  const result = [];
-  let current = '';
-  let inQuotes = false;
-  for (let i = 0; i < line.length; i++) {
-    const ch = line[i];
-    if (ch === '"') {
-      inQuotes = !inQuotes;
-    } else if (ch === ',' && !inQuotes) {
-      result.push(current);
-      current = '';
-    } else {
-      current += ch;
-    }
+// ── PARSE CSV (handles quoted fields) ──
+function splitLine(line) {
+  const r=[]; let cur='', q=false;
+  for (let i=0;i<line.length;i++){
+    if(line[i]==='"'){q=!q;}
+    else if(line[i]===','&&!q){r.push(cur);cur='';}
+    else cur+=line[i];
   }
-  result.push(current);
-  return result;
+  r.push(cur); return r;
 }
 
 function parseCSV(text) {
@@ -301,85 +433,82 @@ function parseCSV(text) {
   const flags   = store.flags;
   const out = [];
 
-  // Log header to debug column order
-  console.log('CSV header:', lines[0]);
-  console.log('CSV row 1:', lines[1]);
-
-  for (let i = 1; i < lines.length; i++) {
-    const cols = splitCSVLine(lines[i]);
-    if (cols.length < 5) continue;
-
-    // Sheet column order: TICKER(0) MERCADO(1) RAW(2) NOMBRE(3) PRECIO(4) TARGET(5) DIVISA(6) FLAG(7) HIGH_52W(8) LOW_52W(9) CHART_52W(10)
-    const tick   = (cols[0]||'').trim();
-    const mkt    = (cols[1]||'').trim();
-    const name   = (cols[3]||'').trim();
-    const price  = parseNum(cols[4]);
-    const tgtRaw = parseNum(cols[5]);
-    const cur    = (cols[6]||'').trim();
-    const high52 = parseNum(cols[8]);
-    const low52  = parseNum(cols[9]);
-
-    if (!tick || tick === 'TICKER') continue;
-
-    // Target: local override wins over sheet value
-    const target = (targets[tick] !== undefined) ? targets[tick] : tgtRaw;
-    // Flag: boolean — local override wins, else false
-    const flagVal = (flags[tick] !== undefined) ? !!flags[tick] : false;
-
-    out.push({ tick, mkt, name, price, target, cur, flag: flagVal, high52, low52 });
+  for (let i=1;i<lines.length;i++) {
+    const c = splitLine(lines[i]);
+    if (c.length < 5) continue;
+    // Cols: TICKER(0) MERCADO(1) RAW(2) NOMBRE(3) PRECIO(4) TARGET(5) DIVISA(6) FLAG(7) HIGH_52W(8) LOW_52W(9)
+    const tick  = c[0].trim();
+    const mkt   = c[1].trim();
+    const name  = c[3].trim();
+    const price = parseNum(c[4]);
+    const tgtSh = parseNum(c[5]);
+    const cur   = c[6].trim();
+    const high52 = parseNum(c[8]);
+    const low52  = parseNum(c[9]);
+    if (!tick || tick==='TICKER') continue;
+    const target  = targets[tick]!==undefined ? targets[tick] : tgtSh;
+    const flagVal = flags[tick]!==undefined ? !!flags[tick] : false;
+    out.push({tick, mkt, name, price, target, cur, flag:flagVal, high52, low52});
   }
   return out;
 }
 
 function upside(r) {
-  if (r.price == null || r.target == null) return null;
-  return ((r.target - r.price) / r.price) * 100;
+  if (r.price==null||r.target==null) return null;
+  return ((r.target-r.price)/r.price)*100;
+}
+
+// Position 0–1 within 52w range (null if data missing)
+function range52pct(r) {
+  if (r.price==null||r.high52==null||r.low52==null||r.high52<=r.low52) return null;
+  return Math.max(0,Math.min(1,(r.price-r.low52)/(r.high52-r.low52)));
 }
 
 // ── LOAD ──
 async function loadSheet() {
   const btn = document.getElementById('btn-reload');
   btn.disabled = true;
-  btn.innerHTML = '<span class="spin"></span> Cargando…';
+  btn.innerHTML = '<span class="spin"></span>';
   try {
-    const res = await fetch(CSV_URL + '&t=' + Date.now());
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const text = await res.text();
-    rows = parseCSV(text);
-    document.getElementById('last-upd').textContent = 'Act. ' + new Date().toLocaleTimeString('es-ES');
+    const res = await fetch(CSV_URL+'&t='+Date.now());
+    if (!res.ok) throw new Error('HTTP '+res.status);
+    rows = parseCSV(await res.text());
+    document.getElementById('last-upd').textContent = new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
     updateStats(); render();
-    toast('✓ ' + rows.length + ' posiciones cargadas');
+    toast('✓ '+rows.length+' posiciones cargadas');
   } catch(e) {
-    toast('❌ ' + e.message);
+    toast('Error: '+e.message);
     console.error(e);
   }
   btn.disabled = false;
-  btn.innerHTML = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 019-9 9.75 9.75 0 016.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 01-9 9 9.75 9.75 0 01-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg> Actualizar`;
+  btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 12a9 9 0 019-9 9.75 9.75 0 016.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 01-9 9 9.75 9.75 0 01-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>`;
 }
 
 // ── STATS ──
 function updateStats() {
-  const ok  = rows.filter(r => r.price != null && r.target != null);
-  const ups = ok.filter(r => upside(r) > 0).length;
-  const dns = ok.filter(r => upside(r) != null && upside(r) <= 0).length;
-  const avg = ok.length ? ok.reduce((s,r)=>s+upside(r),0)/ok.length : null;
-  document.getElementById('s-tot').textContent = rows.length || '—';
-  document.getElementById('s-ld').textContent  = rows.filter(r=>r.price!=null).length + (rows.length ? '/'+rows.length : '');
-  document.getElementById('s-up').textContent  = ups || '—';
-  document.getElementById('s-dn').textContent  = dns || '—';
+  const loaded = rows.filter(r=>r.price!=null);
+  const ok     = loaded.filter(r=>r.target!=null);
+  const ups    = ok.filter(r=>upside(r)>0).length;
+  const dns    = ok.filter(r=>upside(r)!=null&&upside(r)<=0).length;
+  const avg    = ok.length ? ok.reduce((s,r)=>s+upside(r),0)/ok.length : null;
+  document.getElementById('s-tot').textContent = rows.length||'—';
+  document.getElementById('s-ld').textContent  = loaded.length+(rows.length?'/'+rows.length:'');
+  document.getElementById('s-up').textContent  = ups||'—';
+  document.getElementById('s-dn').textContent  = dns||'—';
   const el = document.getElementById('s-avg');
-  el.textContent = avg != null ? (avg>=0?'+':'') + avg.toFixed(1) + '%' : '—';
-  el.className = 'stat-v' + (avg==null?'':avg>0?' up':' dn');
+  el.textContent = avg!=null?(avg>=0?'+':'')+avg.toFixed(1)+'%':'—';
+  el.className = 'stat-v'+(avg==null?'':avg>0?' up':' dn');
 }
 
 // ── SORT ──
-const TH_IDX = {tick:1,mkt:2,price:4,target:5,upside:6,high52:7,low52:8,flag:10};
+const TH_IDX = {tick:1,mkt:2,price:4,target:5,upside:6,high52:7,low52:8,range52:9,flag:10};
 function sortBy(key) {
-  if (sortKey===key) sortDir*=-1; else {sortKey=key; sortDir=key==='upside'||key==='flag'?-1:1;}
+  if (sortKey===key) sortDir*=-1;
+  else { sortKey=key; sortDir=(key==='upside'||key==='flag')?-1:1; }
   document.querySelectorAll('thead th').forEach(th=>th.classList.remove('sorted','asc'));
-  const ths = document.querySelectorAll('thead th');
   const idx = TH_IDX[key];
-  if (idx!=null && ths[idx]) {
+  const ths = document.querySelectorAll('thead th');
+  if (idx!=null&&ths[idx]) {
     ths[idx].classList.add('sorted');
     if (sortDir===1) ths[idx].classList.add('asc');
   }
@@ -389,59 +518,56 @@ function sortBy(key) {
 // ── FILTER ──
 function setFilter(mode) {
   filterMode = mode;
-  ['all','up','dn','flag','up-flag'].forEach(f=>{
+  ['loaded','all','up','dn','flag','up-flag'].forEach(f=>{
     const el=document.getElementById('f-'+f); if(el) el.classList.toggle('active',f===mode);
   });
   render();
 }
 
-// ── SPARKLINE inline SVG ──
-// Muestra la posición del precio actual dentro del rango 52 semanas.
-// Verde si tiene upside, rojo si está cara. Sin dependencias externas.
+// ── SPARKLINE SVG ──
 function sparklineSVG(r) {
-  const W = 100, H = 28;
-  const empty = `<svg width="${W}" height="${H}" style="display:block"></svg>`;
-  if (r.price==null || r.high52==null || r.low52==null || r.high52<=r.low52) return empty;
+  const W=112, H=28;
+  const pct = range52pct(r);
+  if (pct===null) return `<svg width="${W}" height="${H}" style="display:block"><text x="8" y="17" font-size="10" fill="#8e8e93">—</text></svg>`;
 
-  const lo=r.low52, hi=r.high52, pr=r.price;
-  const range = hi - lo;
-  const pct   = Math.max(0, Math.min(1, (pr - lo) / range));
-  // Verde si precio en mitad inferior del rango 52s, rojo si en mitad superior
   const inLower = pct <= 0.5;
-  const lineC = inLower ? '#1a5c38' : '#7a1a1a';
+  const lineC   = inLower ? '#1d6f42' : '#c0392b';
+  const fillC   = inLower ? '#d1eedc' : '#fad7d3';
+  const clamp   = v => Math.max(0,Math.min(1,v));
+  const nx      = v => Math.round(6 + clamp(v)*(W-12));
+  const prX     = nx(pct);
+  const midX    = nx(0.5);
+  const H2      = H/2;
+  const pLabel  = Math.round(pct*100);
 
-  const clamp = v => Math.max(lo, Math.min(hi, v));
-  const nx    = v => Math.round(4 + ((clamp(v)-lo)/range)*(W-8));
-  const prX   = nx(pr);
-  const midX  = Math.round(4 + 0.5*(W-8));
-  const H2    = H/2;
-  const pctLabel = Math.round(pct*100);
-
-  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block" title="${pctLabel}% del rango 52s">
-    <rect x="4" y="${H2-2}" width="${W-8}" height="4" rx="2" fill="#d8d3c8"/>
-    <rect x="4" y="${H2-2}" width="${Math.max(0,prX-4)}" height="4" rx="2" fill="${lineC}" opacity="0.45"/>
-    <line x1="${midX}" y1="${H2-5}" x2="${midX}" y2="${H2+5}" stroke="#b8b2a7" stroke-width="1" stroke-dasharray="2,1"/>
-    <line x1="4" y1="${H2-5}" x2="4" y2="${H2+5}" stroke="#b8b2a7" stroke-width="1.5" stroke-linecap="round"/>
-    <line x1="${W-4}" y1="${H2-5}" x2="${W-4}" y2="${H2+5}" stroke="#b8b2a7" stroke-width="1.5" stroke-linecap="round"/>
-    <circle cx="${prX}" cy="${H2}" r="4.5" fill="${lineC}"/>
-    <circle cx="${prX}" cy="${H2}" r="2" fill="white"/>
+  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block" title="${pLabel}% del rango 52 semanas">
+    <rect x="6" y="${H2-2.5}" width="${W-12}" height="5" rx="2.5" fill="#e5e5ea"/>
+    <rect x="6" y="${H2-2.5}" width="${Math.max(0,prX-6)}" height="5" rx="2.5" fill="${fillC}"/>
+    <line x1="${midX}" y1="${H2-7}" x2="${midX}" y2="${H2+7}" stroke="#c7c7cc" stroke-width="1" stroke-dasharray="2,1.5"/>
+    <line x1="6"   y1="${H2-6}" x2="6"   y2="${H2+6}" stroke="#c7c7cc" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="${W-6}" y1="${H2-6}" x2="${W-6}" y2="${H2+6}" stroke="#c7c7cc" stroke-width="1.5" stroke-linecap="round"/>
+    <circle cx="${prX}" cy="${H2}" r="5" fill="${lineC}"/>
+    <circle cx="${prX}" cy="${H2}" r="2.5" fill="white"/>
   </svg>`;
 }
 
 // ── RENDER ──
-const fmt = (v, d=2) => v==null ? '—' : v.toLocaleString('es-ES',{minimumFractionDigits:d,maximumFractionDigits:d});
+const fmt = (v,d=2) => v==null ? '—' : v.toLocaleString('es-ES',{minimumFractionDigits:d,maximumFractionDigits:d});
 
 function render() {
   const q = (document.getElementById('q').value||'').toLowerCase();
 
   let list = rows.filter(r => {
+    // Text search
     if (q && !r.tick.toLowerCase().includes(q) &&
         !(r.name||'').toLowerCase().includes(q) &&
         !r.mkt.toLowerCase().includes(q)) return false;
-    if (filterMode==='up'      && !(upside(r) > 0)) return false;
-    if (filterMode==='dn'      && !(upside(r)!=null && upside(r)<=0)) return false;
+    // Mode filters
+    if (filterMode==='loaded'  && r.price==null) return false;
+    if (filterMode==='up'      && !(r.price!=null && upside(r)>0)) return false;
+    if (filterMode==='dn'      && !(r.price!=null && upside(r)!=null && upside(r)<=0)) return false;
     if (filterMode==='flag'    && !r.flag) return false;
-    if (filterMode==='up-flag' && !(upside(r)>0 && r.flag)) return false;
+    if (filterMode==='up-flag' && !(r.flag && r.price!=null && upside(r)>0)) return false;
     return true;
   });
 
@@ -455,101 +581,103 @@ function render() {
       if (ua==null) return 1; if (ub==null) return -1;
       return sortDir*(ua-ub);
     }
-    const k = {price:'price',target:'target',high52:'high52',low52:'low52'}[sortKey];
+    if (sortKey==='range52') {
+      const pa=range52pct(a)??-1, pb=range52pct(b)??-1;
+      return sortDir*(pa-pb);
+    }
+    const k={price:'price',target:'target',high52:'high52',low52:'low52'}[sortKey];
     const va=a[k]??-Infinity, vb=b[k]??-Infinity;
     return sortDir*(va-vb);
   });
 
   const tbody = document.getElementById('tbody');
   if (!list.length) {
-    tbody.innerHTML = '<tr class="row-empty"><td colspan="11">Sin resultados</td></tr>';
+    tbody.innerHTML='<tr class="row-empty"><td colspan="11">Sin resultados</td></tr>';
     return;
   }
 
-  tbody.innerHTML = list.map((r, i) => {
+  tbody.innerHTML = list.map((r,i) => {
     const u   = upside(r);
     const uCl = u==null?'nt':u>0?'up':'dn';
     const uSt = u==null?'—':(u>=0?'+':'')+u.toFixed(1)+'%';
-    const safeTick = r.tick.replace(/'/g,"\\'").replace(/"/g,'&quot;');
-    const rid = 'r_' + r.tick.replace(/[^a-zA-Z0-9]/g,'_');
+    const rid = 'r_'+r.tick.replace(/[^a-zA-Z0-9]/g,'_');
+    const sTick = r.tick.replace(/'/g,"\\'");
 
     const prStr = r.price==null
-      ? '<span class="sk" style="width:52px"></span>'
-      : fmt(r.price)+(r.cur?'<span class="cur">'+r.cur+'</span>':'');
+      ? '<span class="sk" style="width:50px;height:13px"></span>'
+      : `<span class="num">${fmt(r.price)}</span>${r.cur?`<span class="cur">${r.cur}</span>`:''}`;
 
     const tgtStr = r.target!=null
-      ? fmt(r.target)+(r.cur?'<span class="cur">'+r.cur+'</span>':'')
-      : '<span style="color:var(--ghost)">—</span>';
+      ? `<span class="num">${fmt(r.target)}</span>${r.cur?`<span class="cur">${r.cur}</span>`:''}`
+      : '<span style="color:var(--label)">—</span>';
 
-    const chartHtml = sparklineSVG(r);
+    const nameStr = r.name
+      ? r.name
+      : (r.price==null ? '<span class="sk" style="width:110px;height:13px"></span>' : '<span style="color:var(--label)">—</span>');
 
-    const flagOn = r.flag ? 'on' : '';
+    const trClass = [r.flag?'flagged':'', r.price==null?'unloaded':''].filter(Boolean).join(' ');
 
-    return `<tr id="${rid}" class="${r.flag?'flagged':''}">
+    return `<tr id="${rid}" class="${trClass}">
       <td class="c-idx">${i+1}</td>
       <td class="c-tick">${r.tick}</td>
       <td class="c-mkt"><span class="mkt-badge">${mflag(r.mkt)} ${r.mkt}</span></td>
-      <td class="c-name" title="${r.name||''}">${r.name||'<span class="sk" style="width:120px"></span>'}</td>
+      <td class="c-name" title="${r.name||''}">${nameStr}</td>
       <td class="c-price">${prStr}</td>
-      <td class="c-tgt"><span class="tgt-span" onclick="editTarget('${safeTick}')">${tgtStr}</span></td>
+      <td class="c-tgt"><span class="tgt-span" onclick="editTarget('${sTick}')">${tgtStr}</span></td>
       <td class="c-up"><span class="pill ${uCl}">${uSt}</span></td>
-      <td class="c-high">${fmt(r.high52)}</td>
-      <td class="c-low">${fmt(r.low52)}</td>
-      <td class="c-chart">${chartHtml}</td>
-      <td class="c-flag"><button class="btn-flag ${flagOn}" onclick="toggleFlag('${safeTick}')" title="Destacar">🔥</button></td>
+      <td class="c-high"><span class="num">${fmt(r.high52)}</span></td>
+      <td class="c-low"><span class="num">${fmt(r.low52)}</span></td>
+      <td class="c-chart">${sparklineSVG(r)}</td>
+      <td class="c-flag"><button class="btn-flag ${r.flag?'on':''}" onclick="toggleFlag('${sTick}')" title="Destacar">🔥</button></td>
     </tr>`;
   }).join('');
 }
 
 // ── TOGGLE FLAG ──
 function toggleFlag(tick) {
-  const r = rows.find(x => x.tick===tick); if (!r) return;
-  r.flag = !r.flag;
-  const f = store.flags; f[tick] = r.flag; store.flags = f;
-  // Update just this row without full re-render
-  const rid = 'r_' + tick.replace(/[^a-zA-Z0-9]/g,'_');
-  const tr  = document.getElementById(rid);
+  const r=rows.find(x=>x.tick===tick); if(!r) return;
+  r.flag=!r.flag;
+  const f=store.flags; f[tick]=r.flag; store.flags=f;
+  const rid='r_'+tick.replace(/[^a-zA-Z0-9]/g,'_');
+  const tr=document.getElementById(rid);
   if (tr) {
-    tr.className = r.flag ? 'flagged' : '';
-    const btn = tr.querySelector('.btn-flag');
-    if (btn) btn.className = 'btn-flag' + (r.flag?' on':'');
+    tr.className=[r.flag?'flagged':'',r.price==null?'unloaded':''].filter(Boolean).join(' ');
+    const btn=tr.querySelector('.btn-flag');
+    if(btn) btn.className='btn-flag'+(r.flag?' on':'');
   }
   updateStats();
 }
 
 // ── EDIT TARGET ──
 function editTarget(tick) {
-  const r = rows.find(x=>x.tick===tick); if (!r) return;
-  const rid = 'r_'+tick.replace(/[^a-zA-Z0-9]/g,'_');
-  const row = document.getElementById(rid); if (!row) return;
-  const span = row.querySelector('.tgt-span');
-  const inp  = document.createElement('input');
+  const r=rows.find(x=>x.tick===tick); if(!r) return;
+  const rid='r_'+tick.replace(/[^a-zA-Z0-9]/g,'_');
+  const row=document.getElementById(rid); if(!row) return;
+  const span=row.querySelector('.tgt-span');
+  const inp=document.createElement('input');
   inp.className='tgt-inp'; inp.type='text';
-  inp.value = r.target!=null ? String(r.target).replace('.',',') : '';
-  inp.placeholder = '0,00';
+  inp.value=r.target!=null?String(r.target).replace('.',','):'';
+  inp.placeholder='0,00';
   span.replaceWith(inp); inp.focus(); inp.select();
-  const save = () => {
-    const v = parseFloat(inp.value.replace(',','.'));
-    r.target = isNaN(v) ? null : v;
-    const t = store.targets; t[tick]=r.target; store.targets=t;
+  const save=()=>{
+    const v=parseFloat(inp.value.replace(',','.'));
+    r.target=isNaN(v)?null:v;
+    const t=store.targets; t[tick]=r.target; store.targets=t;
     updateStats(); render();
   };
-  inp.addEventListener('blur', save);
-  inp.addEventListener('keydown', e=>{
+  inp.addEventListener('blur',save);
+  inp.addEventListener('keydown',e=>{
     if(e.key==='Enter'){e.preventDefault();save();}
     if(e.key==='Escape') render();
   });
 }
-
-
-
 
 // ── TOAST ──
 let _tt;
 function toast(msg){
   const el=document.getElementById('toast');
   el.textContent=msg; el.classList.add('show');
-  clearTimeout(_tt); _tt=setTimeout(()=>el.classList.remove('show'),2800);
+  clearTimeout(_tt); _tt=setTimeout(()=>el.classList.remove('show'),2600);
 }
 
 // ── INIT ──
