@@ -93,30 +93,21 @@ html, body {
 
 /* market filter toggle chip (combinable) */
 .mktbtn {
-  display: inline-flex; align-items: center; gap: 5px;
+  display: inline-flex; align-items: center; justify-content: center;
   flex-shrink: 0;
   background: transparent;
   border: 1px solid var(--brd);
   border-radius: 8px;
-  padding: 0 10px;
+  padding: 0;
+  width: 34px; height: 34px;
   cursor: pointer;
-  height: 34px;
-  font-size: 11.5px; font-weight: 600;
   color: var(--txt3);
   transition: background .1s, border-color .1s, color .1s;
   user-select: none;
 }
-.mktbtn:hover { background: var(--sur2); border-color: var(--brd2); color: var(--txt); }
-.mktbtn .dot {
-  width: 7px; height: 7px; border-radius: 50%;
-  background: var(--brd2);
-  transition: background .1s;
-  flex-shrink: 0;
-}
-.mktbtn.on-open  { border-color: #a8d4b8; color: var(--up); }
-.mktbtn.on-open  .dot { background: var(--up); }
-.mktbtn.on-closed { border-color: #f0b0aa; color: var(--dn); }
-.mktbtn.on-closed .dot { background: var(--dn); }
+.mktbtn:hover { background: var(--sur2); border-color: var(--brd2); color: var(--txt2); }
+.mktbtn.on { border-color: #a8d4b8; color: var(--up); background: #f0faf4; }
+
 
 /* search */
 .search-wrap { position: relative; flex-shrink: 0; }
@@ -282,12 +273,12 @@ td {
 
   <div class="bsep"></div>
 
-  <!-- stat-filter buttons -->
-  <button class="statbtn active" id="f-loaded" onclick="setFilter('loaded')">
-    <span class="stat-l">Cargadas</span><span class="stat-v" id="s-ld">—</span>
-  </button>
+  <!-- stat-filter buttons in order: total, cargadas, baratas, caras, dest, dest+baratas, mkt -->
   <button class="statbtn" id="f-all" onclick="setFilter('all')">
     <span class="stat-l">Total</span><span class="stat-v" id="s-tot">—</span>
+  </button>
+  <button class="statbtn active" id="f-loaded" onclick="setFilter('loaded')">
+    <span class="stat-l">Cargadas</span><span class="stat-v" id="s-ld">—</span>
   </button>
   <button class="statbtn" id="f-up" onclick="setFilter('up')">
     <span class="stat-l">Baratas</span><span class="stat-v up" id="s-up">—</span>
@@ -304,12 +295,11 @@ td {
 
   <div class="bsep"></div>
 
-  <!-- market open/closed combinable filters -->
-  <button class="mktbtn" id="mf-open"   onclick="toggleMktFilter('open')">
-    <span class="dot"></span>Abierto
-  </button>
-  <button class="mktbtn" id="mf-closed" onclick="toggleMktFilter('closed')">
-    <span class="dot"></span>Cerrado
+  <!-- market open toggle (icon only, default ON) -->
+  <button class="mktbtn on" id="mf-open" onclick="toggleMktFilter()" title="Filtrar mercados abiertos">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+    </svg>
   </button>
 
   <!-- reload right -->
@@ -357,7 +347,7 @@ const MF={NASDAQ:'NASDAQ',NYSE:'NYSE',US:'NYSE',OTC:'OTC',BME:'BME',LON:'LON',
           VIE:'VIE',FRA:'FRA',SWX:'SWX'};
 
 let rows=[], sortKey='upside', sortDir=-1, filterMode='loaded';
-let mktFilter=null; // null | 'open' | 'closed'
+let mktFilter='open'; // default: show only open markets
 
 // ── PARSE ──
 function parseNum(s){
@@ -472,12 +462,10 @@ function setFilter(mode){
   render();
 }
 
-function toggleMktFilter(val){
-  mktFilter = (mktFilter===val) ? null : val;
-  const ob=document.getElementById('mf-open');
-  const cb=document.getElementById('mf-closed');
-  ob.className='mktbtn'+(mktFilter==='open' ?' on-open':'');
-  cb.className='mktbtn'+(mktFilter==='closed'?' on-closed':'');
+function toggleMktFilter(){
+  mktFilter = mktFilter==='open' ? null : 'open';
+  document.getElementById('mf-open').className='mktbtn'+(mktFilter?' on':'');
+  toast(mktFilter ? 'Mostrando mercados abiertos' : 'Mostrando todos los mercados, cerrados y abiertos');
   render();
 }
 
