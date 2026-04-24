@@ -256,6 +256,7 @@ td {
 .cpr  { text-align: right; }
 .ctg  { text-align: right; }
 .cup  { text-align: right; }
+.cdchg { text-align: right; }
 .c52  { text-align: right; width: 140px; }
 .num  { font-family: var(--fnum); font-size: 12px; font-variant-numeric: tabular-nums; }
 .cur  { font-size: 9px; color: var(--lbl); margin-left: 2px; }
@@ -383,7 +384,8 @@ td {
         <th class="r" onclick="sortBy('price')">Precio</th>
         <th class="r" onclick="sortBy('target')">Objetivo</th>
         <th class="r sorted" id="th-up" onclick="sortBy('upside')">MoS</th>
-        <th onclick="sortBy('range52')">52W Range</th>
+        <th class="r" onclick="sortBy('daychg')">Día %</th>
+        <th class="r" onclick="sortBy('range52')">52W Range</th>
       </tr>
     </thead>
     <tbody id="tbody"></tbody>
@@ -441,9 +443,10 @@ function parseCSV(text){
     const flagSheet=(c[7]||'').trim().toLowerCase()==='x'; // "x" in sheet = flagged
     const high52=parseNum(c[8]);
     const low52=parseNum(c[9]);
+    const dayChg=parseNum(c[10]);
     const target = tgtSh;
     const flagVal = flagSheet;
-    out.push({tick,mkt,name,price,target,cur,flag:flagVal,high52,low52});
+    out.push({tick,mkt,name,price,target,cur,flag:flagVal,high52,low52,dayChg});
   }
   return out;
 }
@@ -498,7 +501,7 @@ function updateStats(){
 }
 
 // ── SORT ──
-const TH={tick:1,mkt:2,price:4,target:5,upside:6,range52:7,flag:8};
+const TH={tick:1,mkt:2,price:4,target:5,upside:6,daychg:7,range52:8,flag:9};
 function sortBy(key){
   if(sortKey===key) sortDir*=-1;
   else{sortKey=key; sortDir=(key==='upside'||key==='flag')?-1:1;}
@@ -655,6 +658,15 @@ function pillStyle(u) {
   return {bg, color};
 }
 
+// ── DAY CHANGE ──
+function dayChgStr(r) {
+  if (r.dayChg == null) return '<span style="color:var(--lbl)">—</span>';
+  const v   = r.dayChg;
+  const str = (v >= 0 ? '+' : '') + v.toFixed(2) + '%';
+  const col = v > 0 ? 'var(--up)' : v < 0 ? 'var(--dn)' : 'var(--lbl)';
+  return `<span class="num" style="color:${col}">${str}</span>`;
+}
+
 // ── RENDER ──
 const fmt=(v,d=2)=>v==null?'—':v.toLocaleString('es-ES',{minimumFractionDigits:d,maximumFractionDigits:d});
 
@@ -678,6 +690,7 @@ function render(){
     if(sortKey==='flag') return sortDir*((b.flag?1:0)-(a.flag?1:0));
     if(sortKey==='upside'){const ua=upside(a),ub=upside(b);if(ua==null&&ub==null)return 0;if(ua==null)return 1;if(ub==null)return -1;return sortDir*(ua-ub);}
     if(sortKey==='range52'){const pa=r52pct(a)??-1,pb=r52pct(b)??-1;return sortDir*(pa-pb);}
+    if(sortKey==='daychg'){const da=a.dayChg??-Infinity,db=b.dayChg??-Infinity;return sortDir*(da-db);}
     const k={price:'price',target:'target'}[sortKey];
     const va=a[k]??-Infinity,vb=b[k]??-Infinity;
     return sortDir*(va-vb);
@@ -714,6 +727,7 @@ function render(){
       <td class="cpr">${prStr}</td>
       <td class="ctg">${tgtStr}</td>
       <td class="cup"><span ${pillInline}>${uSt}</span></td>
+      <td class="cdchg">${dayChgStr(r)}</td>
       <td class="c52">${range52svg(r)}</td>
     </tr>`;
   }).join('');
