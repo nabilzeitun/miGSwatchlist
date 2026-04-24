@@ -481,34 +481,30 @@ function pillStyle(u) {
 
   // Interpolate through: red → orange → yellow → lime → green
   // Stops: 0→#e74c3c, 0.35→#e67e22, 0.5→#f1c40f, 0.65→#a8d08d, 1→#1d6f42
-  let r, g, b;
+  let cr, cg, cb;
   if (t < 0.35) {
-    // red → orange
     const s = t / 0.35;
-    r = Math.round(231 + (230-231)*s);
-    g = Math.round(76  + (126-76)*s);
-    b = Math.round(60  + (34-60)*s);
+    cr = Math.round(231 + (230-231)*s);
+    cg = Math.round(76  + (126-76)*s);
+    cb = Math.round(60  + (34-60)*s);
   } else if (t < 0.5) {
-    // orange → yellow
     const s = (t-0.35)/0.15;
-    r = Math.round(230 + (241-230)*s);
-    g = Math.round(126 + (196-126)*s);
-    b = Math.round(34  + (15-34)*s);
+    cr = Math.round(230 + (241-230)*s);
+    cg = Math.round(126 + (196-126)*s);
+    cb = Math.round(34  + (15-34)*s);
   } else if (t < 0.65) {
-    // yellow → lime
     const s = (t-0.5)/0.15;
-    r = Math.round(241 + (168-241)*s);
-    g = Math.round(196 + (208-196)*s);
-    b = Math.round(15  + (141-15)*s);
+    cr = Math.round(241 + (168-241)*s);
+    cg = Math.round(196 + (208-196)*s);
+    cb = Math.round(15  + (141-15)*s);
   } else {
-    // lime → green
     const s = (t-0.65)/0.35;
-    r = Math.round(168 + (29-168)*s);
-    g = Math.round(208 + (111-208)*s);
-    b = Math.round(141 + (66-141)*s);
+    cr = Math.round(168 + (29-168)*s);
+    cg = Math.round(208 + (111-208)*s);
+    cb = Math.round(141 + (66-141)*s);
   }
-  const bg = `rgba(${r},${g},${b},0.18)`;
-  const color = `rgb(${Math.round(r*0.6)},${Math.round(g*0.6)},${Math.round(b*0.6)})`;
+  const bg = `rgba(${cr},${cg},${cb},0.18)`;
+  const color = `rgb(${Math.round(cr*0.6)},${Math.round(cg*0.6)},${Math.round(cb*0.6)})`;
   return {bg, color};
 }
 
