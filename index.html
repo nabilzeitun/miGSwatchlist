@@ -192,26 +192,12 @@ td{padding:8px 14px;vertical-align:middle;}
     <input type="text" id="q" placeholder="Buscar ticker, empresa, mercado…" oninput="render()">
   </div>
   <div class="filter-group">
-    <button class="fbtn active" id="f-all"  onclick="setFilter('all')">Todas</button>
-    <button class="fbtn"        id="f-up"   onclick="setFilter('up')">Baratas</button>
-    <button class="fbtn"        id="f-dn"   onclick="setFilter('dn')">Caras</button>
-    <button class="fbtn"        id="f-flag" onclick="setFilter('flag')">🔥 Destacadas</button>
+    <button class="fbtn active" id="f-all"      onclick="setFilter('all')">Todas</button>
+    <button class="fbtn"        id="f-up"        onclick="setFilter('up')">Baratas</button>
+    <button class="fbtn"        id="f-dn"        onclick="setFilter('dn')">Caras</button>
+    <button class="fbtn"        id="f-flag"      onclick="setFilter('flag')">🔥 Destacadas</button>
+    <button class="fbtn"        id="f-up-flag"   onclick="setFilter('up-flag')">📈🔥 Baratas+Dest.</button>
   </div>
-  <div class="sep"></div>
-  <button class="btn-sm" onclick="doExport()">
-    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-      <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-    </svg>
-    Exportar CSV
-  </button>
-  <button class="btn-sm" onclick="openImport()">
-    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-      <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
-    </svg>
-    Importar CSV
-  </button>
 </div>
 
 <div id="scroll">
@@ -235,17 +221,6 @@ td{padding:8px 14px;vertical-align:middle;}
   </table>
 </div>
 
-<div class="overlay" id="modal" style="display:none" onclick="if(event.target===this)this.style.display='none'">
-  <div class="modal">
-    <h3>Importar objetivos</h3>
-    <p>Pega el contenido de un CSV exportado previamente (TICKER,TARGET por línea).</p>
-    <textarea id="csv-in" placeholder="KHC,29.00&#10;NKE,56.00&#10;…"></textarea>
-    <div class="modal-btns">
-      <button class="mbtn" onclick="document.getElementById('modal').style.display='none'">Cancelar</button>
-      <button class="mbtn primary" onclick="doImport()">Importar</button>
-    </div>
-  </div>
-</div>
 
 <div id="toast"></div>
 
@@ -414,7 +389,9 @@ function sortBy(key) {
 // ── FILTER ──
 function setFilter(mode) {
   filterMode = mode;
-  ['all','up','dn','flag'].forEach(f=>document.getElementById('f-'+f).classList.toggle('active',f===mode));
+  ['all','up','dn','flag','up-flag'].forEach(f=>{
+    const el=document.getElementById('f-'+f); if(el) el.classList.toggle('active',f===mode);
+  });
   render();
 }
 
@@ -427,33 +404,26 @@ function sparklineSVG(r) {
   if (r.price==null || r.high52==null || r.low52==null || r.high52<=r.low52) return empty;
 
   const lo=r.low52, hi=r.high52, pr=r.price;
-  const u = upside(r);
-  const lineC = (u!=null&&u>0) ? '#1a5c38' : '#7a1a1a';
-  const fillC = (u!=null&&u>0) ? '#e8f4ee' : '#f4e8e8';
+  const range = hi - lo;
+  const pct   = Math.max(0, Math.min(1, (pr - lo) / range));
+  // Verde si precio en mitad inferior del rango 52s, rojo si en mitad superior
+  const inLower = pct <= 0.5;
+  const lineC = inLower ? '#1a5c38' : '#7a1a1a';
 
-  // Clamp price within range for display
   const clamp = v => Math.max(lo, Math.min(hi, v));
-  const nx = v => 4 + ((clamp(v)-lo)/(hi-lo))*(W-8);
+  const nx    = v => Math.round(4 + ((clamp(v)-lo)/range)*(W-8));
+  const prX   = nx(pr);
+  const midX  = Math.round(4 + 0.5*(W-8));
+  const H2    = H/2;
+  const pctLabel = Math.round(pct*100);
 
-  const H2 = H/2;
-  // Draw a bar showing the range and a marker for current price
-  const prX = Math.round(nx(pr));
-
-  // Range bar (full width, thin)
-  // Fill from left to prX in color
-  const fillW = prX - 4;
-
-  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block">
-    <!-- background track -->
+  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block" title="${pctLabel}% del rango 52s">
     <rect x="4" y="${H2-2}" width="${W-8}" height="4" rx="2" fill="#d8d3c8"/>
-    <!-- filled portion up to current price -->
-    <rect x="4" y="${H2-2}" width="${Math.max(0,fillW)}" height="4" rx="2" fill="${lineC}" opacity="0.35"/>
-    <!-- low marker -->
-    <line x1="4" y1="${H2-6}" x2="4" y2="${H2+6}" stroke="#b8b2a7" stroke-width="1.5" stroke-linecap="round"/>
-    <!-- high marker -->
-    <line x1="${W-4}" y1="${H2-6}" x2="${W-4}" y2="${H2+6}" stroke="#b8b2a7" stroke-width="1.5" stroke-linecap="round"/>
-    <!-- price dot -->
-    <circle cx="${prX}" cy="${H2}" r="4" fill="${lineC}"/>
+    <rect x="4" y="${H2-2}" width="${Math.max(0,prX-4)}" height="4" rx="2" fill="${lineC}" opacity="0.45"/>
+    <line x1="${midX}" y1="${H2-5}" x2="${midX}" y2="${H2+5}" stroke="#b8b2a7" stroke-width="1" stroke-dasharray="2,1"/>
+    <line x1="4" y1="${H2-5}" x2="4" y2="${H2+5}" stroke="#b8b2a7" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="${W-4}" y1="${H2-5}" x2="${W-4}" y2="${H2+5}" stroke="#b8b2a7" stroke-width="1.5" stroke-linecap="round"/>
+    <circle cx="${prX}" cy="${H2}" r="4.5" fill="${lineC}"/>
     <circle cx="${prX}" cy="${H2}" r="2" fill="white"/>
   </svg>`;
 }
@@ -468,9 +438,10 @@ function render() {
     if (q && !r.tick.toLowerCase().includes(q) &&
         !(r.name||'').toLowerCase().includes(q) &&
         !r.mkt.toLowerCase().includes(q)) return false;
-    if (filterMode==='up'   && !(upside(r) > 0)) return false;
-    if (filterMode==='dn'   && !(upside(r)!=null && upside(r)<=0)) return false;
-    if (filterMode==='flag' && !r.flag) return false;
+    if (filterMode==='up'      && !(upside(r) > 0)) return false;
+    if (filterMode==='dn'      && !(upside(r)!=null && upside(r)<=0)) return false;
+    if (filterMode==='flag'    && !r.flag) return false;
+    if (filterMode==='up-flag' && !(upside(r)>0 && r.flag)) return false;
     return true;
   });
 
@@ -570,33 +541,8 @@ function editTarget(tick) {
   });
 }
 
-// ── EXPORT / IMPORT ──
-function doExport() {
-  const lines = ['TICKER,TARGET'];
-  rows.forEach(r=>{if(r.target!=null) lines.push(r.tick+','+r.target);});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([lines.join('\n')],{type:'text/csv'}));
-  a.download = 'watchlist_'+new Date().toISOString().slice(0,10)+'.csv';
-  a.click(); toast('CSV exportado ✓');
-}
-function openImport(){
-  document.getElementById('modal').style.display='flex';
-  document.getElementById('csv-in').value='';
-}
-function doImport() {
-  const lines = document.getElementById('csv-in').value.trim().split('\n');
-  const t = store.targets; let n=0;
-  lines.forEach(ln=>{
-    const [tick,val]=ln.split(','); if(!tick||!val) return;
-    const v=parseFloat(val.trim().replace(',','.'));
-    if(isNaN(v)) return;
-    t[tick.trim()]=v;
-    const r=rows.find(x=>x.tick===tick.trim()); if(r) r.target=v; n++;
-  });
-  store.targets=t;
-  document.getElementById('modal').style.display='none';
-  updateStats(); render(); toast('✓ '+n+' objetivos importados');
-}
+
+
 
 // ── TOAST ──
 let _tt;
