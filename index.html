@@ -55,11 +55,25 @@ html, body {
 .bsep { width: 1px; height: 20px; background: var(--brd2); flex-shrink: 0; }
 
 /* stat chips */
-.stat { display: flex; flex-direction: column; align-items: flex-start; gap: 0; flex-shrink: 0; }
 .stat-l { font-size: 10px; color: var(--lbl); font-weight: 500; line-height: 1.2; }
 .stat-v { font-size: 13px; font-weight: 700; color: var(--txt); font-variant-numeric: tabular-nums; line-height: 1.3; }
 .stat-v.up { color: var(--up); }
 .stat-v.dn { color: var(--dn); }
+
+/* stat-filter button: label on top, value below */
+.statbtn {
+  display: flex; flex-direction: column; align-items: flex-start;
+  gap: 0; flex-shrink: 0;
+  background: none; border: none; border-radius: 8px;
+  padding: 3px 8px; cursor: pointer;
+  transition: background .12s;
+}
+.statbtn:hover { background: var(--sur2); }
+.statbtn.active { background: var(--blue); }
+.statbtn.active .stat-l { color: rgba(255,255,255,.75); }
+.statbtn.active .stat-v { color: #fff; }
+.statbtn.active .stat-v.up { color: #fff; }
+.statbtn.active .stat-v.dn { color: #fff; }
 
 /* search */
 .search-wrap { position: relative; flex-shrink: 0; }
@@ -79,22 +93,8 @@ html, body {
 .search-input:focus { width: 160px; background: var(--sur); border-color: var(--blue); }
 .search-input::placeholder { color: var(--lbl); }
 
-/* filter pills */
-.fpill {
-  background: var(--sur2);
-  border: 1px solid var(--brd);
-  border-radius: 14px;
-  color: var(--txt2);
-  font-size: 11px;
-  font-weight: 500;
-  padding: 3px 10px;
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: all .12s;
-  white-space: nowrap;
-}
-.fpill:hover { background: var(--brd); }
-.fpill.active { background: var(--blue); border-color: var(--blue); color: #fff; }
+
+
 
 /* reload + timestamp */
 .bar-right { margin-left: auto; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
@@ -173,18 +173,7 @@ td {
 .num  { font-family: var(--fnum); font-size: 12px; font-variant-numeric: tabular-nums; }
 .cur  { font-size: 9.5px; color: var(--lbl); margin-left: 1px; }
 
-/* target editable */
-.tsp {
-  display: inline-block; padding: 1px 5px; border-radius: 4px;
-  border: 1px dashed transparent; cursor: pointer; transition: all .12s;
-}
-.tsp:hover { border-color: var(--brd2); background: var(--sur2); }
-.tinp {
-  width: 76px; text-align: right;
-  background: var(--sur); border: 1.5px solid var(--blue); border-radius: 5px;
-  font-family: var(--fnum); font-size: 12px; color: var(--txt);
-  padding: 1px 5px; outline: none;
-}
+
 
 /* upside pill */
 .pill {
@@ -202,11 +191,9 @@ td {
 /* flag button */
 .cfl { width: 34px; text-align: center; }
 .bfl {
-  background: none; border: none; cursor: pointer;
-  font-size: 13px; line-height: 1; padding: 2px 3px;
-  opacity: .18; border-radius: 4px; transition: opacity .12s;
+  font-size: 13px; line-height: 1; display: inline-block;
+  opacity: .15;
 }
-.bfl:hover { opacity: .5; background: var(--sur2); }
 .bfl.on { opacity: 1; }
 
 /* skeleton */
@@ -240,17 +227,7 @@ td {
 
 <!-- SINGLE CONTROL BAR -->
 <div id="bar">
-  <!-- stats -->
-  <div class="stat"><span class="stat-l">Total</span><span class="stat-v" id="s-tot">—</span></div>
-  <div class="stat"><span class="stat-l">Cargadas</span><span class="stat-v" id="s-ld">—</span></div>
-  <div class="stat"><span class="stat-l">Baratas</span><span class="stat-v up" id="s-up">—</span></div>
-  <div class="stat"><span class="stat-l">Caras</span><span class="stat-v dn" id="s-dn">—</span></div>
-  <div class="stat"><span class="stat-l">Upside medio</span><span class="stat-v" id="s-avg">—</span></div>
-
-
-  <div class="bsep"></div>
-
-  <!-- search -->
+  <!-- search left -->
   <div class="search-wrap">
     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
       <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
@@ -258,15 +235,32 @@ td {
     <input class="search-input" type="text" id="q" placeholder="Buscar…" oninput="render()">
   </div>
 
-  <!-- filters -->
-  <button class="fpill active" id="f-loaded"  onclick="setFilter('loaded')">Cargadas</button>
-  <button class="fpill"        id="f-all"     onclick="setFilter('all')">Todas</button>
-  <button class="fpill"        id="f-up"      onclick="setFilter('up')">Baratas</button>
-  <button class="fpill"        id="f-dn"      onclick="setFilter('dn')">Caras</button>
-  <button class="fpill"        id="f-flag"    onclick="setFilter('flag')">🔥</button>
-  <button class="fpill"        id="f-up-flag" onclick="setFilter('up-flag')">🛒🔥</button>
+  <div class="bsep"></div>
 
-  <!-- reload -->
+  <!-- stat-filter buttons -->
+  <button class="statbtn" id="f-all"    onclick="setFilter('all')">
+    <span class="stat-l">Total</span><span class="stat-v" id="s-tot">—</span>
+  </button>
+  <button class="statbtn active" id="f-loaded" onclick="setFilter('loaded')">
+    <span class="stat-l">Cargadas</span><span class="stat-v" id="s-ld">—</span>
+  </button>
+  <button class="statbtn" id="f-up"     onclick="setFilter('up')">
+    <span class="stat-l">Baratas</span><span class="stat-v up" id="s-up">—</span>
+  </button>
+  <button class="statbtn" id="f-dn"     onclick="setFilter('dn')">
+    <span class="stat-l">Caras</span><span class="stat-v dn" id="s-dn">—</span>
+  </button>
+  <button class="statbtn" id="f-avg"    onclick="setFilter('loaded')" style="cursor:default">
+    <span class="stat-l">Upside medio</span><span class="stat-v" id="s-avg">—</span>
+  </button>
+  <button class="statbtn" id="f-flag"   onclick="setFilter('flag')">
+    <span class="stat-l">🔥</span><span class="stat-v" id="s-flag">—</span>
+  </button>
+  <button class="statbtn" id="f-up-flag" onclick="setFilter('up-flag')">
+    <span class="stat-l">🛒🔥</span><span class="stat-v" id="s-upflag">—</span>
+  </button>
+
+  <!-- reload right -->
   <div class="bar-right">
     <span id="last-upd"></span>
     <button class="btn-reload" id="btn-reload" onclick="manualReload()" title="Actualizar">
@@ -279,7 +273,6 @@ td {
     </button>
   </div>
 </div>
-
 <!-- TABLE -->
 <div id="scroll">
   <table>
@@ -306,13 +299,6 @@ td {
 const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQhCXI4uXagUPUSv-QomsWuEoCDHlFlxzrFTXSgi9aQ8Oy1sEacerfIdKxPGZdm1VJw-P1PzNQH5Q3_/pub?gid=0&single=true&output=csv';
 const REFRESH_MS = 60000; // auto-refresh every 60 seconds
 
-// ── STORE ──
-const store = {
-  get targets(){ try{return JSON.parse(localStorage.getItem('wl_t')||'{}')}catch{return{}} },
-  set targets(v){ localStorage.setItem('wl_t',JSON.stringify(v)) },
-  get flags(){   try{return JSON.parse(localStorage.getItem('wl_f')||'{}')}catch{return{}} },
-  set flags(v){  localStorage.setItem('wl_f',JSON.stringify(v)) },
-};
 
 const MF={NASDAQ:'NASDAQ',NYSE:'NYSE',US:'NYSE',OTC:'OTC',BME:'BME',LON:'LON',
           HKG:'HKEX',AMS:'AMS',EPA:'EPA',ETR:'ETR',ASX:'ASX',BIT:'BIT',
@@ -357,9 +343,8 @@ function parseCSV(text){
     const flagSheet=(c[7]||'').trim().toLowerCase()==='x'; // "x" in sheet = flagged
     const high52=parseNum(c[8]);
     const low52=parseNum(c[9]);
-    const target = T[tick]!==undefined ? T[tick] : tgtSh;
-    // Local flag overrides sheet flag only if explicitly set
-    const flagVal = F[tick]!==undefined ? !!F[tick] : flagSheet;
+    const target = tgtSh;
+    const flagVal = flagSheet;
     out.push({tick,mkt,name,price,target,cur,flag:flagVal,high52,low52});
   }
   return out;
@@ -404,10 +389,14 @@ function updateStats(){
   const ups=ok.filter(r=>upside(r)>0).length;
   const dns=ok.filter(r=>upside(r)!=null&&upside(r)<=0).length;
   const avg=ok.length?ok.reduce((s,r)=>s+upside(r),0)/ok.length:null;
+  const flagged = rows.filter(r=>r.flag).length;
+  const upflag  = rows.filter(r=>r.flag&&r.price!=null&&upside(r)>0).length;
   document.getElementById('s-tot').textContent=rows.length||'—';
   document.getElementById('s-ld').textContent=ld.length+(rows.length?'/'+rows.length:'');
   document.getElementById('s-up').textContent=ups||'—';
   document.getElementById('s-dn').textContent=dns||'—';
+  document.getElementById('s-flag').textContent=flagged||'—';
+  document.getElementById('s-upflag').textContent=upflag||'—';
   const el=document.getElementById('s-avg');
   el.textContent=avg!=null?(avg>=0?'+':'')+avg.toFixed(1)+'%':'—';
   el.className='stat-v'+(avg==null?'':avg>0?' up':' dn');
@@ -427,9 +416,10 @@ function sortBy(key){
 // ── FILTER ──
 function setFilter(mode){
   filterMode=mode;
-  ['loaded','all','up','dn','flag','up-flag'].forEach(f=>{
+  ['all','loaded','up','dn','flag','up-flag','avg'].forEach(f=>{
     const el=document.getElementById('f-'+f); if(el) el.classList.toggle('active',f===mode);
   });
+  // loaded is default active visual when mode is 'loaded'
   render();
 }
 
@@ -525,52 +515,19 @@ function render(){
 
     return `<tr id="${rid}" class="${trCls}">
       <td class="ci">${i+1}</td>
-      <td class="cfl"><button class="bfl ${r.flag?'on':''}" onclick="toggleFlag('${st}')">🔥</button></td>
+      <td class="cfl"><span class="bfl ${r.flag?'on':''}">🔥</span></td>
       <td class="ctk">${r.tick}</td>
       <td class="cmkt"><span class="mbadge">${MF[r.mkt]||r.mkt}</span></td>
       <td class="cnm" title="${r.name||''}">${nmStr}</td>
       <td class="cpr">${prStr}</td>
-      <td class="ctg"><span class="tsp" onclick="editTarget('${st}')">${tgtStr}</span></td>
+      <td class="ctg">${tgtStr}</td>
       <td class="cup"><span class="pill ${uCl}">${uSt}</span></td>
       <td class="c52">${range52svg(r)}</td>
     </tr>`;
   }).join('');
 }
 
-// ── TOGGLE FLAG ──
-function toggleFlag(tick){
-  const r=rows.find(x=>x.tick===tick); if(!r) return;
-  r.flag=!r.flag;
-  const f=store.flags; f[tick]=r.flag; store.flags=f;
-  const rid='r_'+tick.replace(/[^a-zA-Z0-9]/g,'_');
-  const tr=document.getElementById(rid);
-  if(tr){
-    tr.className=[r.flag?'flagged':'',r.price==null?'unloaded':''].filter(Boolean).join(' ');
-    const btn=tr.querySelector('.bfl'); if(btn) btn.className='bfl'+(r.flag?' on':'');
-  }
-  updateStats();
-}
 
-// ── EDIT TARGET ──
-function editTarget(tick){
-  const r=rows.find(x=>x.tick===tick); if(!r) return;
-  const rid='r_'+tick.replace(/[^a-zA-Z0-9]/g,'_');
-  const row=document.getElementById(rid); if(!row) return;
-  const span=row.querySelector('.tsp');
-  const inp=document.createElement('input');
-  inp.className='tinp'; inp.type='text';
-  inp.value=r.target!=null?String(r.target).replace('.',','):'';
-  inp.placeholder='0,00';
-  span.replaceWith(inp); inp.focus(); inp.select();
-  const save=()=>{
-    const v=parseFloat(inp.value.replace(',','.'));
-    r.target=isNaN(v)?null:v;
-    const t=store.targets; t[tick]=r.target; store.targets=t;
-    updateStats(); render();
-  };
-  inp.addEventListener('blur',save);
-  inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();save();}if(e.key==='Escape')render();});
-}
 
 // ── TOAST ──
 let _tt;
