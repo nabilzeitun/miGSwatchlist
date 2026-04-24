@@ -461,25 +461,80 @@ function splitLine(line){
   r.push(cur); return r;
 }
 
+// ── CSV HELPERS ──
+// Find 3-letter currency code in split columns
+function findCurrency(cols) {
+  for (const c of cols) {
+    const v = c.trim().replace(/^"|"$/g,'');
+    if (/^[A-Z]{3}$/.test(v) && !['NaN','INF'].includes(v)) return v;
+  }
+  return '';
+}
+
+// Find flag marker 'x' in split columns
+function findFlag(cols) {
+  for (const c of cols) {
+    const v = c.trim().replace(/^"|"$/g,'').toLowerCase();
+    if (v === 'x') return true;
+  }
+  return false;
+}
+
+// Extract ordered list of numbers from column fragments
+// Handles European decimals: "28","71" → 28.71
+function extractNumbers(parts) {
+  const results = [];
+  let i = 0;
+  while (i < parts.length) {
+    const raw = (parts[i]||'').trim().replace(/^"|"$/g,'');
+    // Skip non-numeric/empty/text cols (currency, flag)
+    if (!raw || isNaN(raw.replace(',','.')) && !/^-?\d/.test(raw)) { i++; continue; }
+
+    // Check if this is an integer part of a European decimal (e.g. "28" followed by "71")
+    const isInt = /^-?\d+$/.test(raw);
+    const nextRaw = i+1 < parts.length ? (parts[i+1]||'').trim().replace(/^"|"$/g,'') : '';
+    const nextIsDecimals = /^\d{1,5}$/.test(nextRaw) && nextRaw.length <= 5;
+    // Only combine if next looks like decimal part (≤5 digits, no leading zero issues)
+    if (isInt && nextIsDecimals) {
+      // European decimal: combine as "28,71" → parseNum → 28.71
+      results.push(parseNum(raw + ',' + nextRaw));
+      i += 2;
+    } else {
+      results.push(parseNum(raw));
+      i++;
+    }
+  }
+  return results;
+}
+
 function parseCSV(text){
   const lines=text.trim().split('\n');
   if(lines.length<2) return [];
   const out=[];
   for(let i=1;i<lines.length;i++){
-    const c=splitLine(lines[i].replace(/\r/g,''));
+    const rawLine = lines[i].replace(/\r/g,'');
+    if(rawLine.trim()==='') continue;
+    // Parse CSV with European decimal commas
+    // Strategy: extract fields positionally using quoted-field awareness,
+    // then for numeric fields join adjacent fragments that form a number
+    const c = splitLine(rawLine);
     if(c.length<5) continue;
-    // TICKER(0) MERCADO(1) RAW(2) NOMBRE(3) PRECIO(4) TARGET(5) DIVISA(6) FLAG(7) HIGH_52W(8) LOW_52W(9) VAR_DIA_%(10)
     const tick=c[0].trim(); if(!tick||tick==='TICKER') continue;
     const mkt=c[1].trim();
     const name=c[3].trim();
-    const price=parseNum(c[4]);
-    const tgtSh=parseNum(c[5]);
-    const cur=c[6].trim();
-    const flagSheet=(c[7]||'').trim().toLowerCase()==='x'; // "x" in sheet = flagged
-    const high52=parseNum(c[8]);
-    const low52=parseNum(c[9]);
-    const dayChg=c.length>10 ? parseNum(c[10]) : null;
-    if(out.length===0) console.log('Row 0 cols:', c.length, '| c[10]:', c[10], '| dayChg:', dayChg);
+    const cur = findCurrency(c); // find 3-letter currency code
+    const flagSheet = findFlag(c); // find 'x' flag
+
+    // Extract numbers robustly: find all numeric values in order
+    // Skip cols 0(tick),1(mkt),2(raw),3(name) → remaining cols contain numbers
+    const numericCols = c.slice(4);
+    const nums = extractNumbers(numericCols);
+    // nums[0]=price, nums[1]=target, nums[2]=high52, nums[3]=low52, nums[4]=dayChg
+    const price  = nums[0] ?? null;
+    const tgtSh  = nums[1] ?? null;
+    const high52 = nums[2] ?? null;
+    const low52  = nums[3] ?? null;
+    const dayChg = nums[4] ?? null;
     const target = tgtSh;
     const flagVal = flagSheet;
     out.push({tick,mkt,name,price,target,cur,flag:flagVal,high52,low52,dayChg});
@@ -522,33 +577,25 @@ async function loadFX() {
     if (!res.ok) return;
     const lines = (await res.text()).trim().split('\n');
     const data = {};
-    console.log('FX raw lines:', lines);
     lines.forEach(line => {
       if (!line.trim()) return;
-      // Google Sheets CSV with European locale: comma is decimal separator
-      // Format can be: EURUSD,1,17205  (key=EURUSD, value=1.17205 split across cols)
-      // Or quoted:     "EURUSD","1,17205"
-      // Strategy: first token is key, rest joined with comma = number string
       const stripped = line.replace(/\r/g,'');
-      // Try semicolon first (some locales use ; as CSV separator)
+      // "EURUSD,1,17205" -> key=EURUSD, rawVal="1,17205" -> parseNum -> 1.17205
       if (stripped.includes(';')) {
         const cols = stripped.split(';');
-        const key = cols[0].replace(/^"|"$/g,'').trim().toUpperCase();
-        const val = parseNum(cols[1]);
+        const key = cols[0].replace(/[^A-Za-z]/g,'').toUpperCase();
+        const val = parseNum(cols.slice(1).join(';'));
         if (key && val !== null) data[key] = val;
         return;
       }
-      // Comma-separated: first comma separates key from value
       const firstComma = stripped.indexOf(',');
       if (firstComma === -1) return;
-      const key = stripped.slice(0, firstComma).replace(/^"|"$/g,'').trim().toUpperCase();
-      // Value: everything after first comma, with commas as decimal
-      const rawVal = stripped.slice(firstComma + 1).replace(/^"|"$/g,'').trim();
+      const key = stripped.slice(0, firstComma).replace(/[^A-Za-z]/g,'').toUpperCase();
+      if (!key) return;
+      const rawVal = stripped.slice(firstComma + 1);
       const val = parseNum(rawVal);
-      console.log('FX parsed (,):', key, rawVal, '->', val);
-      if (key && val !== null) data[key] = val;
+      if (val !== null) data[key] = val;
     });
-
     const set = (id, key, decimals=4) => {
       const el = document.getElementById(id);
       if (!el) return;
