@@ -479,6 +479,7 @@ function parseCSV(text){
     const high52=parseNum(c[8]);
     const low52=parseNum(c[9]);
     const dayChg=c.length>10 ? parseNum(c[10]) : null;
+    if(out.length===0) console.log('Row 0 cols:', c.length, '| c[10]:', c[10], '| dayChg:', dayChg);
     const target = tgtSh;
     const flagVal = flagSheet;
     out.push({tick,mkt,name,price,target,cur,flag:flagVal,high52,low52,dayChg});
@@ -521,6 +522,7 @@ async function loadFX() {
     if (!res.ok) return;
     const lines = (await res.text()).trim().split('\n');
     const data = {};
+    console.log('FX raw lines:', lines);
     lines.forEach(line => {
       if (!line.trim()) return;
       // Google Sheets CSV with European locale: comma is decimal separator
@@ -543,6 +545,7 @@ async function loadFX() {
       // Value: everything after first comma, with commas as decimal
       const rawVal = stripped.slice(firstComma + 1).replace(/^"|"$/g,'').trim();
       const val = parseNum(rawVal);
+      console.log('FX parsed (,):', key, rawVal, '->', val);
       if (key && val !== null) data[key] = val;
     });
 
