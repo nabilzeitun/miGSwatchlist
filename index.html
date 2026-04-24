@@ -178,7 +178,10 @@ td {
   display: inline-block; padding: 1px 6px;
   background: var(--sur2); border: 1px solid var(--brd);
   border-radius: 5px; font-size: 10.5px; font-weight: 500; color: var(--txt3);
+  transition: background .3s, color .3s, border-color .3s;
 }
+.mbadge.open   { background: #d1eedc; border-color: #a8d4b8; color: #1d6f42; }
+.mbadge.closed { background: #fad7d3; border-color: #f0b0aa; color: #c0392b; }
 .cnm  { color: var(--txt3); max-width: 160px; overflow: hidden; text-overflow: ellipsis; }
 .cpr, .ctg, .cup, .c52 { text-align: right; }
 .num  { font-family: var(--fnum); font-size: 12px; font-variant-numeric: tabular-nums; }
@@ -373,7 +376,7 @@ async function loadSheet(silent=false){
     if(!res.ok) throw new Error('HTTP '+res.status);
     rows=parseCSV(await res.text());
     const now=new Date();
-    document.getElementById('last-upd').textContent=now.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+    document.getElementById('last-upd').textContent='last snapshot '+now.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
     updateStats(); render();
     if(!silent) toast('✓ '+rows.length+' posiciones');
   }catch(e){
@@ -469,6 +472,45 @@ function range52svg(r){
   </div>`;
 }
 
+// ── MARKET HOURS ──
+// Returns true if the given exchange is currently open.
+// All times compared in UTC.
+function isMarketOpen(mkt) {
+  const now = new Date();
+  const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+  const day = now.getUTCDay(); // 0=Sun,6=Sat
+  if (day === 0 || day === 6) return false; // weekend closed for all
+
+  // Helper: is UTC time between hh:mm and hh:mm?
+  const between = (h1,m1,h2,m2) => {
+    const t = now.getUTCHours()*60+now.getUTCMinutes();
+    return t >= h1*60+m1 && t < h2*60+m2;
+  };
+
+  switch(mkt) {
+    // NYSE / NASDAQ: 14:30–21:00 UTC (09:30–16:00 ET, UTC-5 winter)
+    case 'NYSE': case 'NASDAQ': case 'US': case 'OTC':
+      return between(14,30, 21,0);
+    // BME (Madrid): 08:00–16:30 UTC
+    case 'BME':
+      return between(8,0, 16,30);
+    // LON (London): 08:00–16:30 UTC
+    case 'LON':
+      return between(8,0, 16,30);
+    // EPA (Paris) / ETR (Frankfurt) / AMS / BIT / VIE / FRA / SWX: 08:00–16:30 UTC
+    case 'EPA': case 'ETR': case 'AMS': case 'BIT': case 'VIE': case 'FRA': case 'SWX':
+      return between(8,0, 16,30);
+    // HKG (Hong Kong): 01:30–08:00 UTC (09:30–16:00 HKT, UTC+8)
+    case 'HKG': case 'HKEX':
+      return between(1,30, 8,0);
+    // ASX (Australia): 23:00–05:00 UTC (09:00–15:00 AEST, UTC+10)
+    case 'ASX':
+      return between(23,0, 24,0) || between(0,0, 5,0);
+    default:
+      return false;
+  }
+}
+
 // ── GRADIENT PILL ──
 // Maps upside % to a red→orange→yellow→green color scale
 function pillStyle(u) {
@@ -560,7 +602,7 @@ function render(){
       <td class="ci">${i+1}</td>
       <td class="cfl"><span class="bfl ${r.flag?'on':''}">🔥</span></td>
       <td class="ctk">${r.tick}</td>
-      <td class="cmkt"><span class="mbadge">${MF[r.mkt]||r.mkt}</span></td>
+      <td class="cmkt"><span class="mbadge ${isMarketOpen(r.mkt)?'open':'closed'}">${MF[r.mkt]||r.mkt}</span></td>
       <td class="cnm" title="${r.name||''}">${nmStr}</td>
       <td class="cpr">${prStr}</td>
       <td class="ctg">${tgtStr}</td>
