@@ -52,21 +52,12 @@ html, body {
 }
 #bar::-webkit-scrollbar { display: none; }
 
-/* logo */
-.bar-logo {
-  display: flex; align-items: center; gap: 6px;
-  flex-shrink: 0; margin-right: 4px;
-}
-.bar-logo svg { color: var(--blue); flex-shrink: 0; }
-.bar-logo span { font-size: 13px; font-weight: 700; color: var(--txt); letter-spacing: -.01em; }
-
-/* separator */
 .bsep { width: 1px; height: 20px; background: var(--brd2); flex-shrink: 0; }
 
 /* stat chips */
-.stat { display: flex; align-items: baseline; gap: 4px; flex-shrink: 0; }
-.stat-l { font-size: 11px; color: var(--lbl); font-weight: 500; }
-.stat-v { font-size: 13px; font-weight: 700; color: var(--txt); font-variant-numeric: tabular-nums; }
+.stat { display: flex; flex-direction: column; align-items: flex-start; gap: 0; flex-shrink: 0; }
+.stat-l { font-size: 10px; color: var(--lbl); font-weight: 500; line-height: 1.2; }
+.stat-v { font-size: 13px; font-weight: 700; color: var(--txt); font-variant-numeric: tabular-nums; line-height: 1.3; }
 .stat-v.up { color: var(--up); }
 .stat-v.dn { color: var(--dn); }
 
@@ -155,8 +146,8 @@ tbody tr {
   transition: background .08s;
 }
 tbody tr:hover { background: #f6f6f9; }
-tbody tr.flagged { background: #fff5ee; }
-tbody tr.flagged:hover { background: #ffede0; }
+tbody tr.flagged { background: var(--sur); }
+tbody tr.flagged:hover { background: #f6f6f9; }
 tbody tr.unloaded { opacity: .5; }
 
 /* compact rows */
@@ -249,21 +240,13 @@ td {
 
 <!-- SINGLE CONTROL BAR -->
 <div id="bar">
-  <div class="bar-logo">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
-      <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-    </svg>
-    <span>Watchlist</span>
-  </div>
-
-  <div class="bsep"></div>
-
   <!-- stats -->
   <div class="stat"><span class="stat-l">Total</span><span class="stat-v" id="s-tot">—</span></div>
   <div class="stat"><span class="stat-l">Cargadas</span><span class="stat-v" id="s-ld">—</span></div>
   <div class="stat"><span class="stat-l">Baratas</span><span class="stat-v up" id="s-up">—</span></div>
   <div class="stat"><span class="stat-l">Caras</span><span class="stat-v dn" id="s-dn">—</span></div>
   <div class="stat"><span class="stat-l">Upside medio</span><span class="stat-v" id="s-avg">—</span></div>
+
 
   <div class="bsep"></div>
 
@@ -280,8 +263,8 @@ td {
   <button class="fpill"        id="f-all"     onclick="setFilter('all')">Todas</button>
   <button class="fpill"        id="f-up"      onclick="setFilter('up')">Baratas</button>
   <button class="fpill"        id="f-dn"      onclick="setFilter('dn')">Caras</button>
-  <button class="fpill"        id="f-flag"    onclick="setFilter('flag')">🔥 Dest.</button>
-  <button class="fpill"        id="f-up-flag" onclick="setFilter('up-flag')">📈🔥</button>
+  <button class="fpill"        id="f-flag"    onclick="setFilter('flag')">🔥</button>
+  <button class="fpill"        id="f-up-flag" onclick="setFilter('up-flag')">🛒🔥</button>
 
   <!-- reload -->
   <div class="bar-right">
@@ -303,6 +286,7 @@ td {
     <thead>
       <tr>
         <th class="ci">#</th>
+        <th class="cfl" onclick="sortBy('flag')">🔥</th>
         <th onclick="sortBy('tick')">Ticker</th>
         <th onclick="sortBy('mkt')">Mercado</th>
         <th>Empresa</th>
@@ -310,7 +294,6 @@ td {
         <th class="r" onclick="sortBy('target')">Objetivo</th>
         <th class="r sorted" id="th-up" onclick="sortBy('upside')">Upside %</th>
         <th onclick="sortBy('range52')">52W Range</th>
-        <th class="cfl" onclick="sortBy('flag')">🔥</th>
       </tr>
     </thead>
     <tbody id="tbody"></tbody>
@@ -542,6 +525,7 @@ function render(){
 
     return `<tr id="${rid}" class="${trCls}">
       <td class="ci">${i+1}</td>
+      <td class="cfl"><button class="bfl ${r.flag?'on':''}" onclick="toggleFlag('${st}')">🔥</button></td>
       <td class="ctk">${r.tick}</td>
       <td class="cmkt"><span class="mbadge">${MF[r.mkt]||r.mkt}</span></td>
       <td class="cnm" title="${r.name||''}">${nmStr}</td>
@@ -549,7 +533,6 @@ function render(){
       <td class="ctg"><span class="tsp" onclick="editTarget('${st}')">${tgtStr}</span></td>
       <td class="cup"><span class="pill ${uCl}">${uSt}</span></td>
       <td class="c52">${range52svg(r)}</td>
-      <td class="cfl"><button class="bfl ${r.flag?'on':''}" onclick="toggleFlag('${st}')">🔥</button></td>
     </tr>`;
   }).join('');
 }
