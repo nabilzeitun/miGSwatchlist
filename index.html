@@ -160,17 +160,16 @@ html, body {
   padding: 3px 10px;
   height: 36px;
   min-width: 52px;
-  transition: background .15s, border-color .15s;
   cursor: default;
 }
-.fx-chip:hover { background: rgba(0,0,0,.04); }
+
 .fx-lbl {
   font-size: 9px; font-weight: 600; color: var(--lbl);
   text-transform: uppercase; letter-spacing: .05em; line-height: 1;
 }
 .fx-val {
-  font-family: var(--fnum); font-size: 13px; font-weight: 700;
-  color: var(--txt); font-variant-numeric: tabular-nums; line-height: 1.2;
+  font-family: var(--fnum); font-size: 12px; font-weight: 500;
+  color: var(--txt2); font-variant-numeric: tabular-nums; line-height: 1.2;
 }
 .vix-high { color: var(--dn) !important; }
 .vix-mid  { color: #b8860b !important; }
@@ -504,7 +503,7 @@ async function loadSheet(silent=false){
     if(!res.ok) throw new Error('HTTP '+res.status);
     rows=parseCSV(await res.text());
     const now=new Date();
-    document.getElementById('last-upd').textContent='last snapshot '+now.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    document.getElementById('last-upd').textContent=now.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
     updateStats(); render();
     if(!silent) toast('✓ '+rows.length+' posiciones');
   }catch(e){
@@ -536,19 +535,19 @@ async function loadFX() {
       const el = document.getElementById(id);
       if (!el) return;
       const v = data[key];
-      el.textContent = v != null ? v.toFixed(decimals) : '—';
+      el.textContent = v != null ? Math.trunc(v * Math.pow(10,decimals)) / Math.pow(10,decimals) + '' : '—';
     };
 
-    set('fx-eurusd', 'EURUSD', 4);
-    set('fx-eurgbp', 'EURGBP', 4);
-    set('fx-eurhkd', 'EURHKD', 4);
-    set('fx-euraud', 'EURAUD', 4);
+    set('fx-eurusd', 'EURUSD', 2);
+    set('fx-eurgbp', 'EURGBP', 2);
+    set('fx-eurhkd', 'EURHKD', 2);
+    set('fx-euraud', 'EURAUD', 2);
 
     // VIX with color coding: <15 low (green), 15-25 mid (orange), >25 high (red)
     const vixEl = document.getElementById('fx-vix');
     const vix = data['VIX'];
     if (vixEl && vix != null) {
-      vixEl.textContent = vix.toFixed(2);
+      vixEl.textContent = (Math.trunc(vix * 100) / 100).toString();
       vixEl.className = 'fx-val ' + (vix > 30 ? 'vix-high' : vix >= 20 ? 'vix-mid' : 'vix-low');
     }
   } catch(e) {
