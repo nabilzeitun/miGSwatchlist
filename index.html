@@ -514,27 +514,21 @@ function parseCSV(text){
   for(let i=1;i<lines.length;i++){
     const rawLine = lines[i].replace(/\r/g,'');
     if(rawLine.trim()==='') continue;
-    // Parse CSV with European decimal commas
-    // Strategy: extract fields positionally using quoted-field awareness,
-    // then for numeric fields join adjacent fragments that form a number
+    // splitLine handles quoted fields: "21,89" → single token "21,89"
+    // parseNum("21,89") → 21.89 ✓
     const c = splitLine(rawLine);
     if(c.length<5) continue;
+    // TICKER(0) MERCADO(1) RAW(2) NOMBRE(3) PRECIO(4) TARGET(5) DIVISA(6) FLAG(7) HIGH_52W(8) LOW_52W(9) VAR_DIA_%(10)
     const tick=c[0].trim(); if(!tick||tick==='TICKER') continue;
-    const mkt=c[1].trim();
-    const name=c[3].trim();
-    const cur = findCurrency(c); // find 3-letter currency code
-    const flagSheet = findFlag(c); // find 'x' flag
-
-    // Extract numbers robustly: find all numeric values in order
-    // Skip cols 0(tick),1(mkt),2(raw),3(name) → remaining cols contain numbers
-    const numericCols = c.slice(4);
-    const nums = extractNumbers(numericCols);
-    // nums[0]=price, nums[1]=target, nums[2]=high52, nums[3]=low52, nums[4]=dayChg
-    const price  = nums[0] ?? null;
-    const tgtSh  = nums[1] ?? null;
-    const high52 = nums[2] ?? null;
-    const low52  = nums[3] ?? null;
-    const dayChg = nums[4] ?? null;
+    const mkt   = c[1].trim();
+    const name  = c[3].trim();
+    const price = parseNum(c[4]);
+    const tgtSh = parseNum(c[5]);
+    const cur   = (c[6]||'').trim();
+    const flagSheet = (c[7]||'').trim().toLowerCase() === 'x';
+    const high52 = parseNum(c[8]);
+    const low52  = parseNum(c[9]);
+    const dayChg = parseNum(c[10]);
     const target = tgtSh;
     const flagVal = flagSheet;
     out.push({tick,mkt,name,price,target,cur,flag:flagVal,high52,low52,dayChg});
@@ -579,21 +573,13 @@ async function loadFX() {
     const data = {};
     lines.forEach(line => {
       if (!line.trim()) return;
-      const stripped = line.replace(/\r/g,'');
-      // "EURUSD,1,17205" -> key=EURUSD, rawVal="1,17205" -> parseNum -> 1.17205
-      if (stripped.includes(';')) {
-        const cols = stripped.split(';');
-        const key = cols[0].replace(/[^A-Za-z]/g,'').toUpperCase();
-        const val = parseNum(cols.slice(1).join(';'));
-        if (key && val !== null) data[key] = val;
-        return;
-      }
-      const firstComma = stripped.indexOf(',');
-      if (firstComma === -1) return;
-      const key = stripped.slice(0, firstComma).replace(/[^A-Za-z]/g,'').toUpperCase();
+      // Format: EURUSD,"1,17133"  or  EURUSD,1,17133
+      // Use splitLine which handles quoted fields correctly
+      const cols = splitLine(line.replace(/\r/g,''));
+      if (cols.length < 2) return;
+      const key = cols[0].replace(/[^A-Za-z]/g,'').toUpperCase();
       if (!key) return;
-      const rawVal = stripped.slice(firstComma + 1);
-      const val = parseNum(rawVal);
+      const val = parseNum(cols[1]);
       if (val !== null) data[key] = val;
     });
     const set = (id, key, decimals=4) => {
