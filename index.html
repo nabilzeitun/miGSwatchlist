@@ -150,14 +150,31 @@ html, body {
 /* ── RELOAD ── */
 .bar-right { margin-left: auto; display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
 #last-upd { font-size: 10px; color: var(--lbl); font-variant-numeric: tabular-nums; white-space: nowrap; }
-#fx-bar { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
-.fx-chip { display: flex; align-items: baseline; gap: 4px; flex-shrink: 0; }
-.fx-lbl { font-size: 9px; font-weight: 600; color: var(--lbl); text-transform: uppercase; letter-spacing: .04em; }
-.fx-val { font-family: var(--fnum); font-size: 12px; font-weight: 600; color: var(--txt2); font-variant-numeric: tabular-nums; }
-.vix-high { color: var(--dn); }
-.vix-mid  { color: #b8860b; }
-.vix-low  { color: var(--up); }
-.fx-sep { width: 1px; height: 14px; background: var(--brd2); flex-shrink: 0; }
+#fx-bar { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+.fx-chip {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 1px; flex-shrink: 0;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  padding: 3px 10px;
+  height: 36px;
+  min-width: 52px;
+  transition: background .15s, border-color .15s;
+  cursor: default;
+}
+.fx-chip:hover { background: rgba(0,0,0,.04); }
+.fx-lbl {
+  font-size: 9px; font-weight: 600; color: var(--lbl);
+  text-transform: uppercase; letter-spacing: .05em; line-height: 1;
+}
+.fx-val {
+  font-family: var(--fnum); font-size: 13px; font-weight: 700;
+  color: var(--txt); font-variant-numeric: tabular-nums; line-height: 1.2;
+}
+.vix-high { color: var(--dn) !important; }
+.vix-mid  { color: #b8860b !important; }
+.vix-low  { color: var(--up) !important; }
 .btn-reload {
   background: none; border: none; cursor: pointer;
   color: var(--lbl); display: flex; align-items: center;
@@ -371,13 +388,9 @@ td {
   <div class="bsep"></div>
   <div id="fx-bar">
     <div class="fx-chip"><span class="fx-lbl">EUR/USD</span><span class="fx-val" id="fx-eurusd">—</span></div>
-    <span class="fx-sep"></span>
     <div class="fx-chip"><span class="fx-lbl">EUR/GBP</span><span class="fx-val" id="fx-eurgbp">—</span></div>
-    <span class="fx-sep"></span>
     <div class="fx-chip"><span class="fx-lbl">EUR/HKD</span><span class="fx-val" id="fx-eurhkd">—</span></div>
-    <span class="fx-sep"></span>
     <div class="fx-chip"><span class="fx-lbl">EUR/AUD</span><span class="fx-val" id="fx-euraud">—</span></div>
-    <span class="fx-sep"></span>
     <div class="fx-chip"><span class="fx-lbl">VIX</span><span class="fx-val" id="fx-vix">—</span></div>
   </div>
 
@@ -454,9 +467,9 @@ function parseCSV(text){
   if(lines.length<2) return [];
   const out=[];
   for(let i=1;i<lines.length;i++){
-    const c=splitLine(lines[i]);
+    const c=splitLine(lines[i].replace(/\r/g,''));
     if(c.length<5) continue;
-    // TICKER(0) MERCADO(1) RAW(2) NOMBRE(3) PRECIO(4) TARGET(5) DIVISA(6) FLAG(7) HIGH_52W(8) LOW_52W(9)
+    // TICKER(0) MERCADO(1) RAW(2) NOMBRE(3) PRECIO(4) TARGET(5) DIVISA(6) FLAG(7) HIGH_52W(8) LOW_52W(9) VAR_DIA_%(10)
     const tick=c[0].trim(); if(!tick||tick==='TICKER') continue;
     const mkt=c[1].trim();
     const name=c[3].trim();
@@ -466,7 +479,7 @@ function parseCSV(text){
     const flagSheet=(c[7]||'').trim().toLowerCase()==='x'; // "x" in sheet = flagged
     const high52=parseNum(c[8]);
     const low52=parseNum(c[9]);
-    const dayChg=parseNum(c[10]);
+    const dayChg=c.length>10 ? parseNum(c[10]) : null;
     const target = tgtSh;
     const flagVal = flagSheet;
     out.push({tick,mkt,name,price,target,cur,flag:flagVal,high52,low52,dayChg});
@@ -510,9 +523,10 @@ async function loadFX() {
     const lines = (await res.text()).trim().split('\n');
     const data = {};
     lines.forEach(line => {
-      const cols = line.split(',');
+      // Google Sheets may use comma or semicolon as CSV separator
+      const cols = line.includes(';') ? line.split(';') : line.split(',');
       if (cols.length >= 2) {
-        const key = cols[0].trim().toUpperCase();
+        const key = cols[0].trim().replace(/^"|"$/g,'').toUpperCase();
         const val = parseNum(cols[1]);
         if (key && val !== null) data[key] = val;
       }
