@@ -334,6 +334,14 @@ td {
 }
 #toast.show { transform: translateX(-50%) translateY(0); }
 
+#ver {
+  position: fixed; bottom: 6px; right: 12px;
+  font-size: 9px; color: var(--brd2);
+  font-variant-numeric: tabular-nums;
+  pointer-events: none; z-index: 100;
+  letter-spacing: .04em;
+}
+
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-thumb { background: var(--brd2); border-radius: 2px; }
 ::-webkit-scrollbar-track { background: transparent; }
@@ -431,7 +439,7 @@ td {
 <script>
 const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQhCXI4uXagUPUSv-QomsWuEoCDHlFlxzrFTXSgi9aQ8Oy1sEacerfIdKxPGZdm1VJw-P1PzNQH5Q3_/pub?gid=0&single=true&output=csv';
 const FX_URL  = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQhCXI4uXagUPUSv-QomsWuEoCDHlFlxzrFTXSgi9aQ8Oy1sEacerfIdKxPGZdm1VJw-P1PzNQH5Q3_/pub?gid=1216010991&single=true&output=csv';
-const REFRESH_MS = 30000; // auto-refresh every 30 seconds
+const REFRESH_MS = 5000; // auto-refresh every 5 seconds
 
 
 const MF={NASDAQ:'NASDAQ',NYSE:'NYSE',US:'NYSE',OTC:'OTC',BME:'BME',LON:'LON',
@@ -877,5 +885,6 @@ function toast(msg){const el=document.getElementById('toast');el.textContent=msg
 // ── INIT ──
 updateStats(); render(); loadSheet(); loadFX();
 </script>
+<div id="ver">v0.38</div>
 </body>
 </html>
