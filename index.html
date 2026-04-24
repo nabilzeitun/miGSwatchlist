@@ -367,7 +367,7 @@ td {
 
   /* Hide less critical columns on mobile */
   .col-empresa, th.col-empresa { display: none; }
-  .col-objetivo, th.col-objetivo { display: none; }
+  .col-mercado, th.col-mercado { display: none; }
   .col-52w, th.col-52w { display: none; }
 
   /* Compact table */
@@ -463,10 +463,10 @@ td {
         <th class="ci">#</th>
         <th class="cfl" onclick="sortBy('flag')">🔥</th>
         <th class="l" onclick="sortBy('tick')">Ticker</th>
-        <th class="l" onclick="sortBy('mkt')">Mercado</th>
+        <th class="l col-mercado" onclick="sortBy('mkt')">Mercado</th>
         <th class="l col-empresa">Empresa</th>
         <th class="r" onclick="sortBy('price')">Precio</th>
-        <th class="r col-objetivo" onclick="sortBy('target')">Objetivo</th>
+        <th class="r" onclick="sortBy('target')">Objetivo</th>
         <th class="r sorted" id="th-up" onclick="sortBy('upside')">MoS</th>
         <th class="r" onclick="sortBy('daychg')">Día %</th>
         <th class="r col-52w" onclick="sortBy('range52')">52W Range</th>
@@ -907,10 +907,10 @@ function render(){
       <td class="ci">${i+1}</td>
       <td class="cfl"><span class="bfl ${r.flag?'on':''}">🔥</span></td>
       <td class="ctk">${r.tick}</td>
-      <td class="cmkt"><span class="mbadge ${isMarketOpen(r.mkt)?'open':'closed'}">${MF[r.mkt]||r.mkt}</span></td>
+      <td class="cmkt col-mercado"><span class="mbadge ${isMarketOpen(r.mkt)?'open':'closed'}">${MF[r.mkt]||r.mkt}</span></td>
       <td class="cnm col-empresa" title="${r.name||''}">${nmStr}</td>
       <td class="cpr">${prStr}</td>
-      <td class="ctg col-objetivo">${tgtStr}</td>
+      <td class="ctg">${tgtStr}</td>
       <td class="cup"><span ${pillInline}>${uSt}</span></td>
       <td class="cdchg">${dayChgStr(r)}</td>
       <td class="c52 col-52w">${range52svg(r)}</td>
@@ -927,6 +927,6 @@ function toast(msg){const el=document.getElementById('toast');el.textContent=msg
 // ── INIT ──
 updateStats(); render(); loadSheet(); loadFX();
 </script>
-<div id="ver">v0.39</div>
+<div id="ver">v0.40</div>
 </body>
 </html>
