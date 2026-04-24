@@ -204,8 +204,8 @@ td {
   border-radius: 5px; font-size: 10.5px; font-weight: 500; color: var(--txt3);
   transition: background .3s, color .3s, border-color .3s;
 }
-.mbadge.open   { background: #d1eedc; border-color: #a8d4b8; color: #1d6f42; }
-.mbadge.closed { background: #fad7d3; border-color: #f0b0aa; color: #c0392b; }
+.mbadge.open   { background: rgba(29,111,66,.1); border-color: rgba(29,111,66,.25); color: #1d6f42; }
+.mbadge.closed { background: rgba(192,57,43,.08); border-color: rgba(192,57,43,.2); color: #c0392b; }
 .cnm  { color: var(--txt3); max-width: 160px; overflow: hidden; text-overflow: ellipsis; }
 .cpr, .ctg, .cup, .c52 { text-align: right; }
 .num  { font-family: var(--fnum); font-size: 12px; font-variant-numeric: tabular-nums; }
@@ -454,11 +454,21 @@ function sortBy(key){
 }
 
 // ── FILTER ──
+const FILTER_MSGS = {
+  'all':     'Mostrando todas las empresas',
+  'loaded':  'Mostrando empresas con precios',
+  'up':      'Mostrando empresas baratas',
+  'dn':      'Mostrando empresas caras',
+  'flag':    'Mostrando empresas destacadas',
+  'up-flag': 'Mostrando empresas destacadas y baratas',
+};
+
 function setFilter(mode){
   filterMode=mode;
   ['all','loaded','up','dn','flag','up-flag','avg'].forEach(f=>{
     const el=document.getElementById('f-'+f); if(el) el.classList.toggle('active',f===mode);
   });
+  if(FILTER_MSGS[mode]) toast(FILTER_MSGS[mode]);
   render();
 }
 
