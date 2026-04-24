@@ -63,17 +63,27 @@ html, body {
 /* stat-filter button: label on top, value below */
 .statbtn {
   display: flex; flex-direction: column; align-items: flex-start;
-  gap: 0; flex-shrink: 0;
-  background: none; border: none; border-radius: 8px;
-  padding: 3px 8px; cursor: pointer;
-  transition: background .12s;
+  gap: 1px; flex-shrink: 0;
+  background: none;
+  border: 1.5px solid transparent;
+  border-radius: 10px;
+  padding: 4px 12px;
+  cursor: pointer;
+  transition: background .12s, border-color .12s, box-shadow .12s;
+  min-width: 52px;
 }
-.statbtn:hover { background: var(--sur2); }
-.statbtn.active { background: var(--blue); }
-.statbtn.active .stat-l { color: rgba(255,255,255,.75); }
-.statbtn.active .stat-v { color: #fff; }
-.statbtn.active .stat-v.up { color: #fff; }
-.statbtn.active .stat-v.dn { color: #fff; }
+.statbtn:hover {
+  background: var(--sur2);
+  border-color: var(--brd2);
+}
+.statbtn.active {
+  background: #007aff12;
+  border-color: var(--blue);
+}
+.statbtn.active .stat-l { color: var(--blue); }
+.statbtn.active .stat-v { color: var(--blue); }
+.statbtn.active .stat-v.up { color: var(--blue); }
+.statbtn.active .stat-v.dn { color: var(--blue); }
 
 /* search */
 .search-wrap { position: relative; flex-shrink: 0; }
@@ -124,7 +134,7 @@ thead th {
   position: sticky; top: 0; z-index: 10;
   background: var(--sur);
   padding: 6px 11px;
-  text-align: left;
+  text-align: center;
   font-size: 10.5px;
   font-weight: 600;
   color: var(--lbl);
@@ -135,6 +145,7 @@ thead th {
   user-select: none;
 }
 thead th.r { text-align: right; }
+thead th.l { text-align: left; }
 thead th:hover { color: var(--txt2); }
 thead th.sorted { color: var(--blue); }
 thead th.sorted::after { content: ' ↓'; font-size: 9px; }
@@ -175,14 +186,12 @@ td {
 
 
 
-/* upside pill */
+/* MoS pill — gradient colored via inline style */
 .pill {
   display: inline-block; padding: 1px 7px; border-radius: 5px;
   font-size: 11.5px; font-weight: 600; font-variant-numeric: tabular-nums;
   min-width: 56px; text-align: center;
 }
-.pill.up { background: var(--up-pill); color: var(--up); }
-.pill.dn { background: var(--dn-pill); color: var(--dn); }
 .pill.nt { background: var(--sur2); color: var(--lbl); }
 
 /* 52w range column */
@@ -250,9 +259,6 @@ td {
   <button class="statbtn" id="f-dn"     onclick="setFilter('dn')">
     <span class="stat-l">Caras</span><span class="stat-v dn" id="s-dn">—</span>
   </button>
-  <button class="statbtn" id="f-avg"    onclick="setFilter('loaded')" style="cursor:default">
-    <span class="stat-l">Upside medio</span><span class="stat-v" id="s-avg">—</span>
-  </button>
   <button class="statbtn" id="f-flag"   onclick="setFilter('flag')">
     <span class="stat-l">🔥</span><span class="stat-v" id="s-flag">—</span>
   </button>
@@ -280,12 +286,12 @@ td {
       <tr>
         <th class="ci">#</th>
         <th class="cfl" onclick="sortBy('flag')">🔥</th>
-        <th onclick="sortBy('tick')">Ticker</th>
-        <th onclick="sortBy('mkt')">Mercado</th>
-        <th>Empresa</th>
+        <th class="l" onclick="sortBy('tick')">Ticker</th>
+        <th class="l" onclick="sortBy('mkt')">Mercado</th>
+        <th class="l">Empresa</th>
         <th class="r" onclick="sortBy('price')">Precio</th>
         <th class="r" onclick="sortBy('target')">Objetivo</th>
-        <th class="r sorted" id="th-up" onclick="sortBy('upside')">Upside %</th>
+        <th class="r sorted" id="th-up" onclick="sortBy('upside')">MoS</th>
         <th onclick="sortBy('range52')">52W Range</th>
       </tr>
     </thead>
@@ -397,8 +403,6 @@ function updateStats(){
   document.getElementById('s-dn').textContent=dns||'—';
   document.getElementById('s-flag').textContent=flagged||'—';
   document.getElementById('s-upflag').textContent=upflag||'—';
-  const el=document.getElementById('s-avg');
-  el.textContent=avg!=null?(avg>=0?'+':'')+avg.toFixed(1)+'%':'—';
   el.className='stat-v'+(avg==null?'':avg>0?' up':' dn');
 }
 
@@ -466,6 +470,48 @@ function range52svg(r){
   </div>`;
 }
 
+// ── GRADIENT PILL ──
+// Maps upside % to a red→orange→yellow→green color scale
+function pillStyle(u) {
+  if (u == null) return {bg:'var(--sur2)', color:'var(--lbl)'};
+  // Clamp to [-40, +40] for color mapping
+  const clamped = Math.max(-40, Math.min(40, u));
+  // 0 = fully red (u<=-40), 0.5 = yellow (u=0), 1 = fully green (u>=40)
+  const t = (clamped + 40) / 80;
+
+  // Interpolate through: red → orange → yellow → lime → green
+  // Stops: 0→#e74c3c, 0.35→#e67e22, 0.5→#f1c40f, 0.65→#a8d08d, 1→#1d6f42
+  let r, g, b;
+  if (t < 0.35) {
+    // red → orange
+    const s = t / 0.35;
+    r = Math.round(231 + (230-231)*s);
+    g = Math.round(76  + (126-76)*s);
+    b = Math.round(60  + (34-60)*s);
+  } else if (t < 0.5) {
+    // orange → yellow
+    const s = (t-0.35)/0.15;
+    r = Math.round(230 + (241-230)*s);
+    g = Math.round(126 + (196-126)*s);
+    b = Math.round(34  + (15-34)*s);
+  } else if (t < 0.65) {
+    // yellow → lime
+    const s = (t-0.5)/0.15;
+    r = Math.round(241 + (168-241)*s);
+    g = Math.round(196 + (208-196)*s);
+    b = Math.round(15  + (141-15)*s);
+  } else {
+    // lime → green
+    const s = (t-0.65)/0.35;
+    r = Math.round(168 + (29-168)*s);
+    g = Math.round(208 + (111-208)*s);
+    b = Math.round(141 + (66-141)*s);
+  }
+  const bg = `rgba(${r},${g},${b},0.18)`;
+  const color = `rgb(${Math.round(r*0.6)},${Math.round(g*0.6)},${Math.round(b*0.6)})`;
+  return {bg, color};
+}
+
 // ── RENDER ──
 const fmt=(v,d=2)=>v==null?'—':v.toLocaleString('es-ES',{minimumFractionDigits:d,maximumFractionDigits:d});
 
@@ -497,8 +543,9 @@ function render(){
 
   tbody.innerHTML=list.map((r,i)=>{
     const u=upside(r);
-    const uCl=u==null?'nt':u>0?'up':'dn';
     const uSt=u==null?'—':(u>=0?'+':'')+u.toFixed(1)+'%';
+    const {bg:pBg, color:pColor} = pillStyle(u);
+    const pillInline = u==null ? 'class="pill nt"' : `class="pill" style="background:${pBg};color:${pColor}"`;
     const rid='r_'+r.tick.replace(/[^a-zA-Z0-9]/g,'_');
     const st=r.tick.replace(/'/g,"\\'");
 
@@ -521,7 +568,7 @@ function render(){
       <td class="cnm" title="${r.name||''}">${nmStr}</td>
       <td class="cpr">${prStr}</td>
       <td class="ctg">${tgtStr}</td>
-      <td class="cup"><span class="pill ${uCl}">${uSt}</span></td>
+      <td class="cup"><span ${pillInline}>${uSt}</span></td>
       <td class="c52">${range52svg(r)}</td>
     </tr>`;
   }).join('');
