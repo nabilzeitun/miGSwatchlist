@@ -882,7 +882,47 @@ function render(){
   });
 
   const tbody=document.getElementById('tbody');
-  if(!list.length){tbody.innerHTML='<tr class="row-empty"><td colspan="9">Sin resultados</td></tr>';return;}
+  if(!list.length){
+    if(mktFilter==='open' && rows.length>0 && rows.every(r=>!isMarketOpen(r.mkt))){
+      const mktSet=[...new Set(rows.map(r=>r.mkt))].sort();
+      const HOURS={
+        'NYSE':  ['NYSE / NASDAQ','09:30–16:00 ET','14:30–21:00 UTC'],
+        'NASDAQ':['NYSE / NASDAQ','09:30–16:00 ET','14:30–21:00 UTC'],
+        'OTC':   ['NYSE / NASDAQ','09:30–16:00 ET','14:30–21:00 UTC'],
+        'BME':   ['BME (Madrid)','09:00–17:30 CET','08:00–16:30 UTC'],
+        'LON':   ['LON (Londres)','08:00–16:30 GMT','08:00–16:30 UTC'],
+        'EPA':   ['EPA (París)','09:00–17:30 CET','08:00–16:30 UTC'],
+        'ETR':   ['ETR (Fráncfort)','09:00–17:30 CET','08:00–16:30 UTC'],
+        'AMS':   ['AMS (Ámsterdam)','09:00–17:30 CET','08:00–16:30 UTC'],
+        'BIT':   ['BIT (Milán)','09:00–17:30 CET','08:00–16:30 UTC'],
+        'VIE':   ['VIE (Viena)','09:00–17:30 CET','08:00–16:30 UTC'],
+        'FRA':   ['FRA (Fráncfort)','09:00–17:30 CET','08:00–16:30 UTC'],
+        'SWX':   ['SWX (Zúrich)','09:00–17:30 CET','08:00–16:30 UTC'],
+        'HKG':   ['HKG (Hong Kong)','09:30–16:00 HKT','01:30–08:00 UTC'],
+        'ASX':   ['ASX (Sídney)','10:00–16:00 AEST','00:00–06:00 UTC'],
+      };
+      const seen=new Set();
+      const rows2=mktSet.map(m=>HOURS[m]).filter(r=>r&&!seen.has(r[0])&&seen.add(r[0]));
+      tbody.innerHTML=`<tr><td colspan="9" style="padding:36px 24px;text-align:center">
+        <div style="font-size:22px;margin-bottom:8px">🌙</div>
+        <div style="font-size:15px;font-weight:600;color:var(--txt);margin-bottom:4px">Todos los mercados están cerrados</div>
+        <div style="font-size:12px;color:var(--lbl);margin-bottom:20px">Horarios de apertura</div>
+        <div style="display:inline-grid;grid-template-columns:auto auto auto;gap:4px 20px;text-align:left">
+          <div style="font-size:10px;font-weight:600;color:var(--lbl);text-transform:uppercase;letter-spacing:.04em">Mercado</div>
+          <div style="font-size:10px;font-weight:600;color:var(--lbl);text-transform:uppercase;letter-spacing:.04em">Hora local</div>
+          <div style="font-size:10px;font-weight:600;color:var(--lbl);text-transform:uppercase;letter-spacing:.04em">UTC</div>
+          ${rows2.map(r=>`
+            <div style="font-size:12px;font-weight:500;color:var(--txt2);font-family:var(--fnum)">${r[0]}</div>
+            <div style="font-size:12px;color:var(--txt3);font-family:var(--fnum)">${r[1]}</div>
+            <div style="font-size:12px;color:var(--lbl);font-family:var(--fnum)">${r[2]}</div>
+          `).join('')}
+        </div>
+      </td></tr>`;
+      return;
+    }
+    tbody.innerHTML='<tr class="row-empty"><td colspan="9">Sin resultados</td></tr>';
+    return;
+  }
 
   tbody.innerHTML=list.map((r,i)=>{
     const u=upside(r);
@@ -927,6 +967,6 @@ function toast(msg){const el=document.getElementById('toast');el.textContent=msg
 // ── INIT ──
 updateStats(); render(); loadSheet(); loadFX();
 </script>
-<div id="ver">v0.42</div>
+<div id="ver">v0.43</div>
 </body>
 </html>
