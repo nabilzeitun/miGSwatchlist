@@ -40,16 +40,28 @@ html, body {
   backdrop-filter: saturate(180%) blur(20px);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
   border-bottom: 1px solid var(--brd);
-  display: flex; flex-wrap: wrap; align-items: center;
+  display: flex; flex-wrap: wrap; align-items: stretch;
   padding: 3px 8px; gap: 2px;
   min-height: 44px;
 }
 #bar::-webkit-scrollbar { display: none; }
 
-/* Row groups: inline-flex keeps items together, wraps as unit */
-.bar-row1 { display: flex; align-items: center; flex: 1 1 100%; justify-content: space-evenly; flex-wrap: wrap; gap: 2px; }
-.bar-row2 { display: flex; align-items: center; flex: 1 1 100%; justify-content: space-evenly; gap: 2px; }
-.bar-row3 { display: flex; align-items: center; gap: 3px; }
+/* Each row fills full width and distributes items evenly */
+.bar-row1, .bar-row2, .bar-row3 {
+  display: flex; align-items: center;
+  width: 100%; flex: 0 0 100%;
+  justify-content: space-between; gap: 2px;
+}
+/* When everything fits on one line: rows become inline */
+@media (min-width: 900px) {
+  .bar-row1, .bar-row2, .bar-row3 {
+    width: auto; flex: 1 1 auto;
+    justify-content: flex-start; gap: 4px;
+  }
+  .bar-row1 { flex: 3 1 auto; }
+  .bar-row2 { flex: 2 1 auto; }
+  .bar-row3 { flex: 0 0 auto; margin-left: auto; }
+}
 /* Spacer pushes row2+row3 to the right */
 
 
@@ -76,13 +88,13 @@ html, body {
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
   gap: 1px;
-  flex-shrink: 0;
+  flex: 1 1 auto;
   background: transparent;
   border: 1px solid transparent;
   border-radius: 10px;
-  padding: 3px 11px;
+  padding: 3px 6px;
   height: 36px;
-  min-width: 48px;
+  min-width: 40px;
   cursor: pointer;
   transition: background .15s, border-color .15s, box-shadow .15s;
   user-select: none;
@@ -113,6 +125,7 @@ html, body {
   color: var(--lbl);
   transition: background .15s, border-color .15s, color .15s, box-shadow .15s;
   user-select: none;
+  align-self: center;
 }
 .mktbtn:hover { background: rgba(0,0,0,.04); }
 .mktbtn.on {
@@ -175,13 +188,13 @@ html, body {
 #fx-bar { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
 .fx-chip {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 1px; flex-shrink: 0;
+  gap: 1px; flex: 1 1 auto;
   background: transparent;
   border: 1px solid transparent;
   border-radius: 10px;
-  padding: 3px 10px;
+  padding: 3px 6px;
   height: 36px;
-  min-width: 52px;
+  min-width: 44px;
   cursor: default;
 }
 
@@ -270,8 +283,13 @@ td {
 
 /* ticker */
 .ctk { font-weight: 600; font-size: 13px; letter-spacing: .01em; white-space: nowrap; }
-.mkt-inline { font-size: .72em; font-weight: 500; margin-left: 4px; vertical-align: baseline;
-  padding: 1px 4px; border-radius: 4px; }
+.mkt-inline {
+  font-size: .72em; font-weight: 500;
+  margin-left: 3px; vertical-align: baseline;
+  padding: 1px 3px; border-radius: 3px;
+  font-family: var(--font);
+  letter-spacing: .01em;
+}
 .mkt-inline.open   { color: #1d6f42; background: rgba(29,111,66,.09); }
 .mkt-inline.closed { color: #c0392b; background: rgba(192,57,43,.07); }
 
@@ -853,11 +871,12 @@ function pillStyle(u) {
 
 // ── DAY CHANGE ──
 function dayChgStr(r) {
-  if (r.dayChg == null) return '<span style="color:var(--lbl)">—</span>';
+  if (r.dayChg == null) return '<span class="pill nt">—</span>';
   const v   = r.dayChg;
   const str = (v >= 0 ? '+' : '') + v.toFixed(1) + '%';
-  const col = v > 0 ? 'var(--up)' : v < 0 ? 'var(--dn)' : 'var(--lbl)';
-  return `<span class="num" style="color:${col}">${str}</span>`;
+  // Use same gradient logic as pillStyle for MoS
+  const {bg, color} = pillStyle(v);
+  return `<span class="pill" style="background:${bg};color:${color}">${str}</span>`;
 }
 
 // ── RENDER ──
@@ -985,6 +1004,6 @@ window.addEventListener('resize', adjustScrollTop);
 updateStats(); render(); loadSheet(); loadFX();
 setTimeout(adjustScrollTop, 100);
 </script>
-<div id="ver">v0.49</div>
+<div id="ver">v0.50</div>
 </body>
 </html>
