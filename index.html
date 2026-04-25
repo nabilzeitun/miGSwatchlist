@@ -21,7 +21,7 @@
   --dn:    #c0392b;
   --font:  -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
   --fnum:  'SF Mono', 'Menlo', 'Consolas', monospace;
-  --bar-h: 48px;
+  --bar-h: 44px; /* base — grows with wrapping */
 }
 
 html, body {
@@ -36,16 +36,19 @@ html, body {
 /* ── BAR ── */
 #bar {
   position: fixed; top: 0; left: 0; right: 0; z-index: 300;
-  height: var(--bar-h);
   background: rgba(255,255,255,.88);
   backdrop-filter: saturate(180%) blur(20px);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
   border-bottom: 1px solid var(--brd);
-  display: flex; align-items: center;
-  padding: 0 16px; gap: 6px;
-  overflow-x: auto;
+  display: flex; flex-wrap: wrap; align-items: center;
+  padding: 4px 12px; gap: 4px 6px;
 }
 #bar::-webkit-scrollbar { display: none; }
+
+/* Row groups — keep each group together on same line */
+.bar-row1 { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; width: 100%; }
+.bar-row2 { display: flex; align-items: center; gap: 4px; width: 100%; }
+.bar-row3 { display: flex; align-items: center; gap: 6px; width: 100%; padding-bottom: 1px; }
 
 /* separator */
 .bsep {
@@ -124,24 +127,27 @@ html, body {
 /* ── SEARCH ── */
 .search-wrap { position: relative; flex-shrink: 0; }
 .search-wrap svg {
-  position: absolute; left: 8px; top: 50%;
+  position: absolute; left: 7px; top: 50%;
   transform: translateY(-50%);
   color: var(--lbl); pointer-events: none;
+  transition: opacity .15s;
 }
+.search-wrap:focus-within svg { opacity: 0; pointer-events: none; }
 .search-input {
-  width: 120px;
+  width: 44px;
   background: rgba(118,118,128,.12);
   border: none;
   border-radius: 10px;
   color: var(--txt);
   font-family: var(--font);
   font-size: 13px;
-  padding: 6px 10px 6px 28px;
+  padding: 6px 8px 6px 26px;
   outline: none;
-  transition: width .2s, background .15s;
+  transition: width .2s, background .15s, padding .2s;
 }
 .search-input:focus {
-  width: 180px;
+  width: 160px;
+  padding: 6px 10px;
   background: var(--sur);
   box-shadow: 0 0 0 3px rgba(0,122,255,.15);
 }
@@ -350,46 +356,43 @@ td {
 ::-webkit-scrollbar-thumb { background: var(--brd2); border-radius: 2px; }
 ::-webkit-scrollbar-track { background: transparent; }
 
-/* ── MOBILE RESPONSIVE ── */
-@media (max-width: 600px) {
-  :root { --bar-h: 42px; }
-
-  /* Bar: tighter */
-  #bar { padding: 0 8px; gap: 3px; }
-  .bsep { margin: 0 1px; }
-  .statbtn { padding: 2px 7px; height: 32px; min-width: 38px; }
+/* ── RESPONSIVE — fluid compression ── */
+@media (max-width: 700px) {
+  .statbtn { padding: 2px 6px; height: 30px; min-width: 34px; }
   .stat-l { font-size: 8px; }
-  .stat-v { font-size: 12px; }
+  .stat-v { font-size: 11px; }
   .mktbtn { width: 30px; height: 30px; }
-  .search-input { width: 80px; font-size: 11px; }
-  .search-input:focus { width: 110px; }
-  .fx-chip { padding: 2px 5px; height: 30px; min-width: 36px; }
+  .fx-chip { padding: 2px 5px; height: 30px; min-width: 32px; }
   .fx-lbl { font-size: 7.5px; }
   .fx-val { font-size: 10px; }
-  #last-upd { font-size: 8px; }
-  .btn-reload svg { width: 12px; height: 12px; }
+  #last-upd { font-size: 9px; }
+  #bar { padding: 3px 8px; gap: 3px 4px; }
+  .bsep { margin: 0 1px; height: 18px; }
 
-  /* Hide less critical columns on mobile */
+  td { padding: 4px 6px; font-size: 11px; }
+  thead th { padding: 5px 6px; font-size: 9px; }
+  .num { font-size: 11px; }
+  .pill { font-size: 10px; padding: 1px 5px; min-width: 40px; }
+  .mbadge { font-size: 9.5px; padding: 1px 4px; }
+  .ci { width: 18px; }
+  .cfl { width: 18px; }
+  .c52 { width: 90px; }
+  #fx-bar { gap: 1px; }
+}
+
+@media (max-width: 500px) {
+  /* Hide less critical columns */
   .col-empresa, th.col-empresa { display: none; }
   .col-mercado, th.col-mercado { display: none; }
   .col-52w, th.col-52w { display: none; }
 
-  /* Compact table */
-  td { padding: 5px 6px; font-size: 11.5px; }
-  thead th { padding: 5px 6px; font-size: 9.5px; }
-  .ci { width: 20px; padding-right: 2px; font-size: 10px; }
-  .ctk { font-size: 12px; }
-  .cmkt { width: 52px; }
-  .mbadge { font-size: 9.5px; padding: 1px 4px; }
-  .cpr, .ctg, .cup, .cdchg { min-width: 44px; }
-  .num { font-size: 11px; }
-  .pill { font-size: 10px; padding: 1px 5px; min-width: 44px; }
-  .cfl { width: 20px; }
-  .bfl { font-size: 11px; }
-  .c52 { width: 80px; }
-
-  /* FX bar: scroll silently */
-  #fx-bar { gap: 2px; }
+  td { padding: 4px 4px; font-size: 10.5px; }
+  thead th { padding: 4px 4px; font-size: 8.5px; }
+  .num { font-size: 10.5px; }
+  .pill { font-size: 9.5px; min-width: 36px; }
+  .statbtn { padding: 1px 5px; height: 28px; min-width: 28px; }
+  .stat-v { font-size: 10px; }
+  .stat-l { font-size: 7px; }
 }
 </style>
 </head>
@@ -397,57 +400,54 @@ td {
 
 <!-- SINGLE CONTROL BAR -->
 <div id="bar">
-  <!-- search left -->
-  <div class="search-wrap">
-    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-      <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-    </svg>
-    <input class="search-input" type="text" id="q" placeholder="Buscar…" oninput="render()">
+  <!-- ROW 1: search + filters -->
+  <div class="bar-row1">
+    <div class="search-wrap">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+      </svg>
+      <input class="search-input" type="text" id="q" placeholder="…" oninput="render()">
+    </div>
+    <div class="bsep"></div>
+    <button class="statbtn" id="f-all" onclick="setFilter('all')">
+      <span class="stat-l">Total</span><span class="stat-v" id="s-tot">—</span>
+    </button>
+    <button class="statbtn" id="f-loaded" onclick="setFilter('loaded')">
+      <span class="stat-l">Cargadas</span><span class="stat-v" id="s-ld">—</span>
+    </button>
+    <button class="statbtn active" id="f-up" onclick="setFilter('up')">
+      <span class="stat-l">Baratas</span><span class="stat-v up" id="s-up">—</span>
+    </button>
+    <button class="statbtn" id="f-dn" onclick="setFilter('dn')">
+      <span class="stat-l">Caras</span><span class="stat-v dn" id="s-dn">—</span>
+    </button>
+    <button class="statbtn" id="f-flag" onclick="setFilter('flag')">
+      <span class="stat-l">🔥</span><span class="stat-v" id="s-flag">—</span>
+    </button>
+    <button class="statbtn" id="f-up-flag" onclick="setFilter('up-flag')">
+      <span class="stat-l">🛒🔥</span><span class="stat-v" id="s-upflag">—</span>
+    </button>
   </div>
 
-  <div class="bsep"></div>
-
-  <!-- stat-filter buttons in order: total, cargadas, baratas, caras, dest, dest+baratas, mkt -->
-  <button class="statbtn" id="f-all" onclick="setFilter('all')">
-    <span class="stat-l">Total</span><span class="stat-v" id="s-tot">—</span>
-  </button>
-  <button class="statbtn" id="f-loaded" onclick="setFilter('loaded')">
-    <span class="stat-l">Cargadas</span><span class="stat-v" id="s-ld">—</span>
-  </button>
-  <button class="statbtn active" id="f-up" onclick="setFilter('up')">
-    <span class="stat-l">Baratas</span><span class="stat-v up" id="s-up">—</span>
-  </button>
-  <button class="statbtn" id="f-dn" onclick="setFilter('dn')">
-    <span class="stat-l">Caras</span><span class="stat-v dn" id="s-dn">—</span>
-  </button>
-  <button class="statbtn" id="f-flag" onclick="setFilter('flag')">
-    <span class="stat-l">🔥</span><span class="stat-v" id="s-flag">—</span>
-  </button>
-  <button class="statbtn" id="f-up-flag" onclick="setFilter('up-flag')">
-    <span class="stat-l">🛒🔥</span><span class="stat-v" id="s-upflag">—</span>
-  </button>
-
-  <div class="bsep"></div>
-
-  <!-- market open toggle (icon only, default ON) -->
-  <button class="mktbtn on" id="mf-open" onclick="toggleMktFilter()" title="Filtrar mercados abiertos">
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-    </svg>
-  </button>
-
-  <!-- reload right -->
-  <!-- FX rates + VIX -->
-  <div class="bsep"></div>
-  <div id="fx-bar">
-    <div class="fx-chip"><span class="fx-lbl">EUR/USD</span><span class="fx-val" id="fx-eurusd">—</span></div>
-    <div class="fx-chip"><span class="fx-lbl">EUR/GBP</span><span class="fx-val" id="fx-eurgbp">—</span></div>
-    <div class="fx-chip"><span class="fx-lbl">EUR/HKD</span><span class="fx-val" id="fx-eurhkd">—</span></div>
-    <div class="fx-chip"><span class="fx-lbl">EUR/AUD</span><span class="fx-val" id="fx-euraud">—</span></div>
-    <div class="fx-chip"><span class="fx-lbl">VIX</span><span class="fx-val" id="fx-vix">—</span></div>
+  <!-- ROW 2: market toggle + FX + VIX -->
+  <div class="bar-row2">
+    <button class="mktbtn on" id="mf-open" onclick="toggleMktFilter()" title="Filtrar mercados abiertos">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+      </svg>
+    </button>
+    <div class="bsep"></div>
+    <div id="fx-bar">
+      <div class="fx-chip"><span class="fx-lbl">EUR/USD</span><span class="fx-val" id="fx-eurusd">—</span></div>
+      <div class="fx-chip"><span class="fx-lbl">EUR/GBP</span><span class="fx-val" id="fx-eurgbp">—</span></div>
+      <div class="fx-chip"><span class="fx-lbl">EUR/HKD</span><span class="fx-val" id="fx-eurhkd">—</span></div>
+      <div class="fx-chip"><span class="fx-lbl">EUR/AUD</span><span class="fx-val" id="fx-euraud">—</span></div>
+      <div class="fx-chip"><span class="fx-lbl">VIX</span><span class="fx-val" id="fx-vix">—</span></div>
+    </div>
   </div>
 
-  <div class="bar-right">
+  <!-- ROW 3: timestamp + reload -->
+  <div class="bar-row3">
     <span id="last-upd"></span>
     <button class="btn-reload" id="btn-reload" onclick="manualReload()" title="Actualizar">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
@@ -971,8 +971,14 @@ let _tt;
 function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(_tt);_tt=setTimeout(()=>el.classList.remove('show'),2400);}
 
 // ── INIT ──
+function adjustScrollTop() {
+  const barH = document.getElementById('bar').offsetHeight;
+  document.getElementById('scroll').style.top = barH + 'px';
+}
+window.addEventListener('resize', adjustScrollTop);
 updateStats(); render(); loadSheet(); loadFX();
+setTimeout(adjustScrollTop, 100);
 </script>
-<div id="ver">v0.45</div>
+<div id="ver">v0.46</div>
 </body>
 </html>
