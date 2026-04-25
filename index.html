@@ -41,21 +41,17 @@ html, body {
   -webkit-backdrop-filter: saturate(180%) blur(20px);
   border-bottom: 1px solid var(--brd);
   display: flex; flex-wrap: wrap; align-items: center;
-  padding: 4px 12px; gap: 4px 6px;
+  padding: 3px 12px; gap: 3px 6px;
+  min-height: 44px;
 }
 #bar::-webkit-scrollbar { display: none; }
 
-/* Row groups — keep each group together on same line */
-.bar-row1 { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; width: 100%; }
-.bar-row2 { display: flex; align-items: center; gap: 4px; width: 100%; }
-.bar-row3 { display: flex; align-items: center; gap: 6px; width: 100%; padding-bottom: 1px; }
+/* Row groups: inline-flex keeps items together, wraps as atomic unit */
+.bar-row1 { display: inline-flex; align-items: center; gap: 3px; flex-shrink: 0; }
+.bar-row2 { display: inline-flex; align-items: center; gap: 3px; flex-shrink: 0; }
+.bar-row3 { display: inline-flex; align-items: center; gap: 3px; flex-shrink: 0; }
 
-/* separator */
-.bsep {
-  width: 1px; height: 24px;
-  background: var(--brd2);
-  flex-shrink: 0; margin: 0 4px;
-}
+.bsep { display: none; }
 
 /* ── STAT-FILTER CHIPS ── */
 .stat-l {
@@ -143,19 +139,27 @@ html, body {
   font-size: 13px;
   padding: 6px 8px 6px 26px;
   outline: none;
-  transition: width .2s, background .15s, padding .2s;
+  transition: background .15s;
 }
 .search-input:focus {
-  width: 160px;
-  padding: 6px 10px;
   background: var(--sur);
-  box-shadow: 0 0 0 3px rgba(0,122,255,.15);
+  box-shadow: 0 0 0 2px rgba(0,122,255,.2);
 }
 .search-input::placeholder { color: var(--lbl); }
 
 /* ── RELOAD ── */
-.bar-right { margin-left: auto; display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
-#last-upd { font-size: 10px; color: var(--lbl); font-variant-numeric: tabular-nums; white-space: nowrap; }
+/* reload chip */
+.reload-chip {
+  display: inline-flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 1px; flex-shrink: 0; cursor: pointer;
+  background: transparent; border: 1px solid transparent; border-radius: 10px;
+  padding: 3px 8px; height: 36px;
+  transition: background .12s;
+}
+.reload-chip:hover { background: rgba(0,0,0,.04); }
+.reload-chip:disabled { opacity: .4; cursor: not-allowed; }
+.reload-chip.spinning svg { animation: ro .65s linear infinite; }
+#last-upd { font-size: 9px; color: var(--lbl); font-variant-numeric: tabular-nums; white-space: nowrap; line-height: 1; }
 #fx-bar { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
 .fx-chip {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -180,21 +184,6 @@ html, body {
 .vix-high { color: var(--dn) !important; }
 .vix-mid  { color: #b8860b !important; }
 .vix-low  { color: var(--up) !important; }
-.btn-reload {
-  background: none; border: none; cursor: pointer;
-  color: var(--lbl); display: flex; align-items: center;
-  padding: 4px; border-radius: 8px;
-  transition: background .12s, color .12s;
-}
-.btn-reload:hover { background: rgba(0,0,0,.06); color: var(--txt2); }
-.btn-reload:disabled { opacity: .35; cursor: not-allowed; }
-.spin {
-  width: 14px; height: 14px;
-  border: 1.8px solid var(--brd2);
-  border-top-color: var(--lbl);
-  border-radius: 50%;
-  animation: ro .65s linear infinite;
-}
 @keyframes ro { to { transform: rotate(360deg); } }
 
 /* ── SCROLL ── */
@@ -367,7 +356,6 @@ td {
   .fx-val { font-size: 10px; }
   #last-upd { font-size: 9px; }
   #bar { padding: 3px 8px; gap: 3px 4px; }
-  .bsep { margin: 0 1px; height: 18px; }
 
   td { padding: 4px 6px; font-size: 11px; }
   thead th { padding: 5px 6px; font-size: 9px; }
@@ -446,16 +434,16 @@ td {
     </div>
   </div>
 
-  <!-- ROW 3: timestamp + reload -->
+  <!-- ROW 3: reload chip (icon + time) -->
   <div class="bar-row3">
-    <span id="last-upd"></span>
-    <button class="btn-reload" id="btn-reload" onclick="manualReload()" title="Actualizar">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+    <button class="reload-chip" id="btn-reload" onclick="manualReload()" title="Actualizar">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--lbl)" stroke-width="2.2">
         <path d="M3 12a9 9 0 019-9 9.75 9.75 0 016.74 2.74L21 8"/>
         <path d="M21 3v5h-5"/>
         <path d="M21 12a9 9 0 01-9 9 9.75 9.75 0 01-6.74-2.74L3 16"/>
         <path d="M8 16H3v5"/>
       </svg>
+      <span id="last-upd">—</span>
     </button>
   </div>
 </div>
@@ -601,7 +589,7 @@ async function loadSheet(silent=false){
   _loading=true;
   const btn=document.getElementById('btn-reload');
   btn.disabled=true;
-  btn.innerHTML='<span class="spin"></span>';
+  btn.classList.add('spinning');
   try{
     const res=await fetch(CSV_URL+'&t='+Date.now());
     if(!res.ok) throw new Error('HTTP '+res.status);
@@ -622,7 +610,7 @@ async function loadSheet(silent=false){
     if(!silent) toast('Error: '+e.message);
   }
   btn.disabled=false;
-  btn.innerHTML=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 12a9 9 0 019-9 9.75 9.75 0 016.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 01-9 9 9.75 9.75 0 01-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>`;
+  btn.classList.remove('spinning');
   _loading=false;
 }
 function manualReload(){ loadSheet(false); loadFX(); }
@@ -979,6 +967,6 @@ window.addEventListener('resize', adjustScrollTop);
 updateStats(); render(); loadSheet(); loadFX();
 setTimeout(adjustScrollTop, 100);
 </script>
-<div id="ver">v0.46</div>
+<div id="ver">v0.47</div>
 </body>
 </html>
