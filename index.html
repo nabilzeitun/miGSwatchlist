@@ -40,27 +40,41 @@ html, body {
   backdrop-filter: saturate(180%) blur(20px);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
   border-bottom: 1px solid var(--brd);
-  display: flex; flex-wrap: wrap; align-items: stretch;
+  /* Default: 3 rows stacked */
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto;
   padding: 3px 8px; gap: 2px;
-  min-height: 44px;
 }
 #bar::-webkit-scrollbar { display: none; }
 
-/* Each row fills full width and distributes items evenly */
-.bar-row1, .bar-row2, .bar-row3 {
+/* Row 1: search + reload chip — space-between */
+.bar-row1 {
   display: flex; align-items: center;
-  width: 100%; flex: 0 0 100%;
-  justify-content: space-between; gap: 2px;
+  justify-content: space-between; gap: 4px;
 }
-/* When everything fits on one line: rows become inline */
-@media (min-width: 900px) {
-  .bar-row1, .bar-row2, .bar-row3 {
-    width: auto; flex: 1 1 auto;
-    justify-content: flex-start; gap: 4px;
+/* Row 2: filter buttons — evenly distributed */
+.bar-row2 {
+  display: flex; align-items: center;
+  justify-content: space-evenly; gap: 2px;
+}
+/* Row 3: mkt toggle + FX + VIX — evenly distributed */
+.bar-row3 {
+  display: flex; align-items: center;
+  justify-content: space-evenly; gap: 2px;
+}
+
+/* Wide screens: single row */
+@media (min-width: 1100px) {
+  #bar {
+    grid-template-columns: auto 1fr auto auto;
+    grid-template-rows: 1fr;
+    align-items: center; gap: 4px;
+    padding: 3px 12px;
   }
-  .bar-row1 { flex: 3 1 auto; }
-  .bar-row2 { flex: 2 1 auto; }
-  .bar-row3 { flex: 0 0 auto; margin-left: auto; }
+  .bar-row1 { justify-content: flex-start; gap: 4px; }
+  .bar-row2 { justify-content: center; gap: 3px; }
+  .bar-row3 { justify-content: flex-end; gap: 3px; }
 }
 /* Spacer pushes row2+row3 to the right */
 
@@ -88,13 +102,13 @@ html, body {
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
   gap: 1px;
-  flex: 1 1 auto;
+  flex: 1 1 0;
   background: transparent;
   border: 1px solid transparent;
   border-radius: 10px;
-  padding: 3px 6px;
+  padding: 3px 4px;
   height: 36px;
-  min-width: 40px;
+  min-width: 36px;
   cursor: pointer;
   transition: background .15s, border-color .15s, box-shadow .15s;
   user-select: none;
@@ -185,16 +199,15 @@ html, body {
 .reload-chip:disabled { opacity: .4; cursor: not-allowed; }
 .reload-chip.spinning svg { animation: ro .65s linear infinite; }
 #last-upd { font-size: 9px; color: var(--lbl); font-variant-numeric: tabular-nums; white-space: nowrap; line-height: 1; }
-#fx-bar { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
 .fx-chip {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 1px; flex: 1 1 auto;
+  gap: 1px; flex: 1 1 0;
   background: transparent;
   border: 1px solid transparent;
   border-radius: 10px;
-  padding: 3px 6px;
+  padding: 3px 4px;
   height: 36px;
-  min-width: 44px;
+  min-width: 36px;
   cursor: default;
 }
 
@@ -284,7 +297,7 @@ td {
 /* ticker */
 .ctk { font-weight: 600; font-size: 13px; letter-spacing: .01em; white-space: nowrap; }
 .mkt-inline {
-  font-size: .72em; font-weight: 500;
+  font-size: .62em; font-weight: 500;
   margin-left: 3px; vertical-align: baseline;
   padding: 1px 3px; border-radius: 3px;
   font-family: var(--font);
@@ -381,6 +394,13 @@ td {
 ::-webkit-scrollbar-track { background: transparent; }
 
 /* ── RESPONSIVE — fluid compression ── */
+/* Always hide Empresa & 52W Range at narrow widths */
+@media (max-width: 800px) {
+  .col-empresa, th.col-empresa { display: none; }
+}
+@media (max-width: 680px) {
+  .col-52w, th.col-52w { display: none; }
+}
 @media (max-width: 700px) {
   .statbtn { padding: 2px 6px; height: 30px; min-width: 34px; }
   .stat-l { font-size: 8px; }
@@ -406,7 +426,6 @@ td {
 @media (max-width: 500px) {
   /* Hide less critical columns */
   .col-empresa, th.col-empresa { display: none; }
-  .col-mercado, th.col-mercado { display: none; }
   .col-52w, th.col-52w { display: none; }
 
   td { padding: 4px 4px; font-size: 10.5px; }
@@ -423,7 +442,7 @@ td {
 
 <!-- SINGLE CONTROL BAR -->
 <div id="bar">
-  <!-- ROW 1: search + filters -->
+  <!-- ROW 1: search + reload -->
   <div class="bar-row1">
     <div class="search-wrap">
       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
@@ -431,7 +450,19 @@ td {
       </svg>
       <input class="search-input" type="text" id="q" placeholder="…" oninput="render()">
     </div>
-    <div class="bsep"></div>
+    <button class="reload-chip" id="btn-reload" onclick="manualReload()" title="Actualizar">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--lbl)" stroke-width="2.2">
+        <path d="M3 12a9 9 0 019-9 9.75 9.75 0 016.74 2.74L21 8"/>
+        <path d="M21 3v5h-5"/>
+        <path d="M21 12a9 9 0 01-9 9 9.75 9.75 0 01-6.74-2.74L3 16"/>
+        <path d="M8 16H3v5"/>
+      </svg>
+      <span id="last-upd">—</span>
+    </button>
+  </div>
+
+  <!-- ROW 2: filter buttons evenly spaced -->
+  <div class="bar-row2">
     <button class="statbtn" id="f-all" onclick="setFilter('all')">
       <span class="stat-l">Total</span><span class="stat-v" id="s-tot">—</span>
     </button>
@@ -452,34 +483,18 @@ td {
     </button>
   </div>
 
-  <!-- ROW 2: market toggle + FX + VIX -->
-  <div class="bar-row2">
+  <!-- ROW 3: mkt toggle + FX + VIX evenly spaced -->
+  <div class="bar-row3">
     <button class="mktbtn on" id="mf-open" onclick="toggleMktFilter()" title="Filtrar mercados abiertos">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
       </svg>
     </button>
-    <div class="bsep"></div>
-    <div id="fx-bar">
-      <div class="fx-chip"><span class="fx-lbl">EUR/USD</span><span class="fx-val" id="fx-eurusd">—</span></div>
-      <div class="fx-chip"><span class="fx-lbl">EUR/GBP</span><span class="fx-val" id="fx-eurgbp">—</span></div>
-      <div class="fx-chip"><span class="fx-lbl">EUR/HKD</span><span class="fx-val" id="fx-eurhkd">—</span></div>
-      <div class="fx-chip"><span class="fx-lbl">EUR/AUD</span><span class="fx-val" id="fx-euraud">—</span></div>
-      <div class="fx-chip"><span class="fx-lbl">VIX</span><span class="fx-val" id="fx-vix">—</span></div>
-    </div>
-  </div>
-
-  <!-- ROW 3: reload chip (icon + time) -->
-  <div class="bar-row3">
-    <button class="reload-chip" id="btn-reload" onclick="manualReload()" title="Actualizar">
-      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--lbl)" stroke-width="2.2">
-        <path d="M3 12a9 9 0 019-9 9.75 9.75 0 016.74 2.74L21 8"/>
-        <path d="M21 3v5h-5"/>
-        <path d="M21 12a9 9 0 01-9 9 9.75 9.75 0 01-6.74-2.74L3 16"/>
-        <path d="M8 16H3v5"/>
-      </svg>
-      <span id="last-upd">—</span>
-    </button>
+    <div class="fx-chip"><span class="fx-lbl">EUR/USD</span><span class="fx-val" id="fx-eurusd">—</span></div>
+    <div class="fx-chip"><span class="fx-lbl">EUR/GBP</span><span class="fx-val" id="fx-eurgbp">—</span></div>
+    <div class="fx-chip"><span class="fx-lbl">EUR/HKD</span><span class="fx-val" id="fx-eurhkd">—</span></div>
+    <div class="fx-chip"><span class="fx-lbl">EUR/AUD</span><span class="fx-val" id="fx-euraud">—</span></div>
+    <div class="fx-chip"><span class="fx-lbl">VIX</span><span class="fx-val" id="fx-vix">—</span></div>
   </div>
 </div>
 <!-- TABLE -->
@@ -1004,6 +1019,6 @@ window.addEventListener('resize', adjustScrollTop);
 updateStats(); render(); loadSheet(); loadFX();
 setTimeout(adjustScrollTop, 100);
 </script>
-<div id="ver">v0.50</div>
+<div id="ver">v0.51</div>
 </body>
 </html>
