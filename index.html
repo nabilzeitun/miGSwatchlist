@@ -216,7 +216,8 @@ html, body {
 /* ── SCROLL ── */
 #scroll {
   position: fixed;
-  top: 44px; left: 0; right: 0; bottom: 0;
+  top: 0; left: 0; right: 0; bottom: 0;
+  padding-top: 44px; /* adjusted by JS */
   overflow: auto;
   -webkit-overflow-scrolling: touch;
   background: var(--sur);
@@ -1003,7 +1004,10 @@ function toast(msg){const el=document.getElementById('toast');el.textContent=msg
 // ── INIT ──
 function adjustScrollTop() {
   const barH = document.getElementById('bar').offsetHeight;
-  if (barH > 0) document.getElementById('scroll').style.top = barH + 'px';
+  if (barH > 0) {
+    document.getElementById('scroll').style.paddingTop = barH + 'px';
+    document.getElementById('scroll').style.top = '0';
+  }
 }
 window.addEventListener('resize', adjustScrollTop);
 // Run on every render too
@@ -1015,6 +1019,7 @@ setTimeout(adjustScrollTop, 50);
 setTimeout(adjustScrollTop, 200);
 setTimeout(adjustScrollTop, 500);
 </script>
-<div id="ver">myRadar v0.54</div>
+
+<div id="ver">myRadar v0.55</div>
 </body>
 </html>
