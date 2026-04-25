@@ -46,10 +46,12 @@ html, body {
 }
 #bar::-webkit-scrollbar { display: none; }
 
-/* Row groups: inline-flex keeps items together, wraps as atomic unit */
-.bar-row1 { display: inline-flex; align-items: center; gap: 3px; flex-shrink: 0; }
+/* Row groups: inline-flex keeps items together, wraps as unit */
+.bar-row1 { display: inline-flex; align-items: center; gap: 3px; flex: 1 1 auto; flex-wrap: wrap; justify-content: space-between; }
 .bar-row2 { display: inline-flex; align-items: center; gap: 3px; flex-shrink: 0; }
 .bar-row3 { display: inline-flex; align-items: center; gap: 3px; flex-shrink: 0; }
+/* Spacer pushes row2+row3 to the right */
+.bar-spacer { flex: 1 1 auto; min-width: 8px; }
 
 .bsep { display: none; }
 
@@ -136,16 +138,26 @@ html, body {
   border-radius: 10px;
   color: var(--txt);
   font-family: var(--font);
-  font-size: 13px;
-  padding: 6px 8px 6px 26px;
+  font-size: 12px;
+  padding: 6px 4px 6px 22px; /* lupa takes 22px */
   outline: none;
-  transition: background .15s;
+  transition: background .15s, padding .15s;
 }
 .search-input:focus {
+  padding: 6px 4px; /* collapse lupa space when focused */
   background: var(--sur);
   box-shadow: 0 0 0 2px rgba(0,122,255,.2);
 }
+.search-input:not(:placeholder-shown) {
+  padding: 6px 4px; /* also collapse when text present */
+}
 .search-input::placeholder { color: var(--lbl); }
+/* Active search highlight */
+.search-wrap.active .search-input {
+  background: var(--sur);
+  border: 1.5px solid var(--brd2);
+  box-shadow: 0 1px 3px rgba(0,0,0,.1);
+}
 
 /* ── RELOAD ── */
 /* reload chip */
@@ -417,6 +429,7 @@ td {
     </button>
   </div>
 
+  <div class="bar-spacer"></div>
   <!-- ROW 2: market toggle + FX + VIX -->
   <div class="bar-row2">
     <button class="mktbtn on" id="mf-open" onclick="toggleMktFilter()" title="Filtrar mercados abiertos">
@@ -849,6 +862,9 @@ const fmt=(v,d=2)=>v==null?'—':v.toLocaleString('es-ES',{minimumFractionDigits
 
 function render(){
   const q=(document.getElementById('q').value||'').toLowerCase();
+  // Active state on search wrap
+  const sw=document.querySelector('.search-wrap');
+  if(sw) sw.classList.toggle('active', q.length>0);
   let list=rows.filter(r=>{
     if(q&&!r.tick.toLowerCase().includes(q)&&!(r.name||'').toLowerCase().includes(q)&&!r.mkt.toLowerCase().includes(q)) return false;
     if(filterMode==='loaded'  && r.price==null) return false;
@@ -967,6 +983,6 @@ window.addEventListener('resize', adjustScrollTop);
 updateStats(); render(); loadSheet(); loadFX();
 setTimeout(adjustScrollTop, 100);
 </script>
-<div id="ver">v0.47</div>
+<div id="ver">v0.48</div>
 </body>
 </html>
