@@ -877,12 +877,18 @@ function pillStyle(u) {
 
 // ── DAY CHANGE ──
 function dayChgStr(r) {
-  if (r.dayChg == null) return '<span class="pill nt">—</span>';
+  if (r.dayChg == null) return '<span style="color:var(--lbl)">—</span>';
   const v   = r.dayChg;
   const str = (v >= 0 ? '+' : '') + v.toFixed(1) + '%';
-  // Use same gradient logic as pillStyle for MoS
-  const {bg, color} = pillStyle(v);
-  return `<span class="pill" style="background:${bg};color:${color}">${str}</span>`;
+  // Only highlight if beyond ±5%
+  if (v >= 5) {
+    return `<span class="pill" style="background:rgba(29,111,66,.18);color:#1d6f42;font-weight:600">${str}</span>`;
+  } else if (v <= -5) {
+    return `<span class="pill" style="background:rgba(192,57,43,.18);color:#c0392b;font-weight:600">${str}</span>`;
+  } else {
+    // Between -5 and +5: plain black text, no background
+    return `<span style="font-family:var(--fnum);font-size:11.5px;font-weight:600;color:var(--txt)">${str}</span>`;
+  }
 }
 
 // ── RENDER ──
@@ -1012,6 +1018,6 @@ setTimeout(adjustScrollTop, 50);
 setTimeout(adjustScrollTop, 300);
 </script>
 
-<div id="ver">myRadar v0.57</div>
+<div id="ver">myRadar v0.58</div>
 </body>
 </html>
