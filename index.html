@@ -880,15 +880,44 @@ function dayChgStr(r) {
   if (r.dayChg == null) return '<span style="color:var(--lbl)">—</span>';
   const v   = r.dayChg;
   const str = (v >= 0 ? '+' : '') + v.toFixed(1) + '%';
-  // Only highlight if beyond ±5%
-  if (v >= 5) {
-    return `<span class="pill" style="background:rgba(29,111,66,.18);color:#1d6f42;font-weight:600">${str}</span>`;
-  } else if (v <= -5) {
-    return `<span class="pill" style="background:rgba(192,57,43,.18);color:#c0392b;font-weight:600">${str}</span>`;
-  } else {
-    // Between -5 and +5: plain black text, no background
-    return `<span style="font-family:var(--fnum);font-size:11.5px;font-weight:600;color:var(--txt)">${str}</span>`;
+  const base = 'font-family:var(--fnum);font-size:11.5px;font-weight:600;';
+
+  // Extreme: beyond ±10% — intense color + pill highlight (like VIX)
+  if (v >= 10) {
+    return `<span class="pill" style="background:rgba(29,111,66,.25);color:#1d6f42;outline:1.5px solid rgba(29,111,66,.5)">${str}</span>`;
   }
+  if (v <= -10) {
+    return `<span class="pill" style="background:rgba(192,57,43,.25);color:#c0392b;outline:1.5px solid rgba(192,57,43,.5)">${str}</span>`;
+  }
+
+  // Gradient zone +3% to +10%
+  if (v >= 3) {
+    // t: 0 at +3%, 1 at +10%
+    const t  = Math.min(1, (v - 3) / 7);
+    // yellow-green at t=0 → green at t=1
+    const cr = Math.round(180 - 151 * t);   // 180→29
+    const cg = Math.round(210 - 99  * t);   // 210→111
+    const cb = Math.round(100 - 34  * t);   // 100→66
+    const bg    = `rgba(${cr},${cg},${cb},0.16)`;
+    const color = `rgb(${Math.round(cr*.6)},${Math.round(cg*.6)},${Math.round(cb*.6)})`;
+    return `<span class="pill" style="background:${bg};color:${color}">${str}</span>`;
+  }
+
+  // Gradient zone -3% to -10%
+  if (v <= -3) {
+    // t: 0 at -3%, 1 at -10%
+    const t  = Math.min(1, (Math.abs(v) - 3) / 7);
+    // yellow at t=0 → orange → red at t=1
+    const cr = Math.round(241 + (192 - 241) * t);
+    const cg = Math.round(196 + (57  - 196) * t);
+    const cb = Math.round(15  + (43  - 15)  * t);
+    const bg    = `rgba(${cr},${cg},${cb},0.16)`;
+    const color = `rgb(${Math.round(cr*.6)},${Math.round(cg*.6)},${Math.round(cb*.6)})`;
+    return `<span class="pill" style="background:${bg};color:${color}">${str}</span>`;
+  }
+
+  // Between -3% and +3%: plain black, no background
+  return `<span style="${base}color:var(--txt)">${str}</span>`;
 }
 
 // ── RENDER ──
@@ -1018,6 +1047,6 @@ setTimeout(adjustScrollTop, 50);
 setTimeout(adjustScrollTop, 300);
 </script>
 
-<div id="ver">myRadar v0.58</div>
+<div id="ver">myRadar v0.59</div>
 </body>
 </html>
