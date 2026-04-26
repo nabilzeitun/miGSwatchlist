@@ -53,20 +53,24 @@ html, body {
   - ALL rows use space-evenly so items are always equidistant
   - At ≥1100px: rows go inline via flex:1 and we get a single line
 */
-.bar-row1, .bar-row2, .bar-row3 {
-  display: flex;
-  align-items: center;
-  justify-content: space-evenly;
-  flex: 1 1 100%;   /* full width → each row on its own line */
-  gap: 2px;
+/* Row 1: filters fill full width, row 2: FX fills full width */
+.bar-row1 {
+  display: flex; align-items: center;
+  width: 100%; flex: 1 1 100%;
+  gap: 4px;
 }
-/* At wide screens: single row, compact with auto spacing */
-@media (min-width: 900px) {
-  #bar { flex-wrap: nowrap; gap: 2px; }
-  .bar-row1 { flex: 0 0 auto; gap: 4px; justify-content: flex-start; }
-  .bar-row2 { flex: 1 1 auto; gap: 3px; justify-content: center; }
-  .bar-row3 { flex: 0 0 auto; gap: 3px; justify-content: flex-end; }
+.bar-row2 {
+  display: flex; align-items: center;
+  width: 100%; flex: 1 1 100%;
+  justify-content: space-between; gap: 4px;
+}
 .bar-row3 { display: none; }
+
+/* Wide: single line — row1 takes flex space, row2 fixed */
+@media (min-width: 1000px) {
+  #bar { flex-wrap: nowrap; gap: 8px; }
+  .bar-row1 { flex: 1 1 auto; width: auto; }
+  .bar-row2 { flex: 0 0 auto; width: auto; }
 }
 
 .bsep { display: none; }
@@ -91,7 +95,7 @@ html, body {
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
   gap: 1px;
-  flex: 0 0 auto;
+  flex: 1 1 0;
   background: transparent;
   border: 1px solid transparent;
   border-radius: 10px;
@@ -1144,6 +1148,6 @@ setTimeout(adjustScrollTop, 50);
 setTimeout(adjustScrollTop, 300);
 </script>
 
-<div id="ver">myRadar v0.76</div>
+<div id="ver">myRadar v0.77</div>
 </body>
 </html>
