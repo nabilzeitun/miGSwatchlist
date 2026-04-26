@@ -212,6 +212,22 @@ html, body {
 .vix-mid  { color: #b8860b !important; }
 .vix-low  { color: var(--up) !important; }
 @keyframes ro { to { transform: rotate(360deg); } }
+@keyframes pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(29,111,66,.5); }
+  70%  { box-shadow: 0 0 0 6px rgba(29,111,66,0); }
+  100% { box-shadow: 0 0 0 0 rgba(29,111,66,0); }
+}
+.pulse-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #1d6f42;
+  animation: pulse 1.6s infinite;
+  flex-shrink: 0;
+}
+.dead-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #c0392b;
+  flex-shrink: 0;
+}
 
 /* ── SCROLL ── */
 #scroll {
@@ -445,9 +461,7 @@ td {
       <input class="search-input" type="text" id="q" placeholder="" oninput="render()">
     </div>
     <button class="mktbtn on" id="mf-open" onclick="toggleMktFilter()" title="Filtrar mercados abiertos">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-      </svg>
+      <span id="mkt-dot" class="pulse-dot"></span>
     </button>
     <button class="reload-chip" id="btn-reload" onclick="manualReload()" title="Actualizar">
       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--lbl)" stroke-width="2.2">
@@ -646,6 +660,7 @@ async function loadSheet(silent=false){
       });
     }
     rows = newRows;
+    updateMktDot();
     const now=new Date();
     document.getElementById('last-upd').textContent=now.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
     updateStats(); render();
@@ -754,8 +769,20 @@ function setFilter(mode){
 function toggleMktFilter(){
   mktFilter = mktFilter==='open' ? null : 'open';
   document.getElementById('mf-open').className='mktbtn'+(mktFilter?' on':'');
+  updateMktDot();
   toast(mktFilter ? 'Mostrando mercados abiertos' : 'Mostrando todos los mercados, cerrados y abiertos');
   render();
+}
+
+function updateMktDot(){
+  const dot = document.getElementById('mkt-dot');
+  if (!dot) return;
+  const anyOpen = rows.length > 0 && rows.some(r => isMarketOpen(r.mkt));
+  if (anyOpen) {
+    dot.className = 'pulse-dot'; // green pulsing = markets alive
+  } else {
+    dot.className = 'dead-dot';  // red static = markets dead
+  }
 }
 
 // ── 52W RANGE SVG (compact, shows min/price/max in one cell) ──
@@ -1082,6 +1109,6 @@ setTimeout(adjustScrollTop, 50);
 setTimeout(adjustScrollTop, 300);
 </script>
 
-<div id="ver">myRadar v0.67</div>
+<div id="ver">myRadar v0.68</div>
 </body>
 </html>
