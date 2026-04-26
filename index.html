@@ -196,18 +196,7 @@ html, body {
 .vix-low  { color: var(--up) !important; }
 @keyframes ro { to { transform: rotate(360deg); } }
 #btn-reload.spinning svg { animation: ro .65s linear infinite; }
-@keyframes ecg-pulse {
-  0%   { opacity: 1; }
-  50%  { opacity: .4; }
-  100% { opacity: 1; }
-}
-@keyframes ecg-pulse-red {
-  0%   { opacity: 1; }
-  50%  { opacity: .25; }
-  100% { opacity: 1; }
-}
-.ecg-alive     { animation: ecg-pulse     1.4s ease-in-out infinite; }
-.ecg-alive-red { animation: ecg-pulse-red 1.8s ease-in-out infinite; }
+
 
 /* ── SCROLL ── */
 #scroll {
@@ -787,43 +776,41 @@ function updateMktDot(){
   const dot  = document.getElementById('mkt-dot2');
   const grad = document.getElementById('area-g');
   if (!ecg) return;
-
   const filterOn = mktFilter === 'open';
   const anyOpen  = rows.length > 0 && rows.some(r => isMarketOpen(r.mkt));
-  ecg.classList.remove('ecg-alive', 'ecg-alive-red');
-
+  dot.innerHTML = '';
   if (filterOn && anyOpen) {
-    // State C: active + open → green sparkline with fill, pulsing
     const c = '#1d6f42';
-    line.setAttribute('stroke', c);
-    dot.setAttribute('fill', c);
     grad.children[0].setAttribute('stop-color', c);
     grad.children[1].setAttribute('stop-color', c);
-    line.setAttribute('points', '0,16 4,12 8,9 12,11 16,5 20,3 24,6 28,1');
     area.setAttribute('d', 'M0,16 L4,12 L8,9 L12,11 L16,5 L20,3 L24,6 L28,1 L28,18 L0,18 Z');
-    dot.setAttribute('cx', '28'); dot.setAttribute('cy', '1');
-    ecg.classList.add('ecg-alive');
+    line.setAttribute('stroke', c);
+    line.setAttribute('points', '0,16 4,12 8,9 12,11 16,5 20,3 24,6 28,1');
+    dot.setAttribute('r', '2.5');
+    dot.setAttribute('fill', c);
+    dot.setAttribute('cx', '0'); dot.setAttribute('cy', '0');
+    dot.setAttribute('visibility', 'visible');
+    dot.innerHTML = '<animateMotion dur="2.5s" repeatCount="indefinite" path="M0,16 L4,12 L8,9 L12,11 L16,5 L20,3 L24,6 L28,1"/>';
   } else if (filterOn && !anyOpen) {
-    // State B: active + closed → flat red fill, pulsing
     const c = '#f85149';
-    line.setAttribute('stroke', c);
-    dot.setAttribute('fill', c);
     grad.children[0].setAttribute('stop-color', c);
     grad.children[1].setAttribute('stop-color', c);
-    line.setAttribute('points', '0,9 28,9');
     area.setAttribute('d', 'M0,9 L28,9 L28,18 L0,18 Z');
-    dot.setAttribute('cx', '28'); dot.setAttribute('cy', '9');
-    ecg.classList.add('ecg-alive-red');
+    line.setAttribute('stroke', c);
+    line.setAttribute('points', '0,9 28,9');
+    dot.setAttribute('r', '2.5');
+    dot.setAttribute('fill', c);
+    dot.setAttribute('cx', '0'); dot.setAttribute('cy', '0');
+    dot.setAttribute('visibility', 'visible');
+    dot.innerHTML = '<animateMotion dur="2s" repeatCount="indefinite" path="M0,9 L28,9"/>';
   } else {
-    // State A: inactive → flat red fill, static
     const c = '#f85149';
-    line.setAttribute('stroke', c);
-    dot.setAttribute('fill', c);
     grad.children[0].setAttribute('stop-color', c);
     grad.children[1].setAttribute('stop-color', c);
-    line.setAttribute('points', '0,9 28,9');
     area.setAttribute('d', 'M0,9 L28,9 L28,18 L0,18 Z');
-    dot.setAttribute('cx', '28'); dot.setAttribute('cy', '9');
+    line.setAttribute('stroke', c);
+    line.setAttribute('points', '0,9 28,9');
+    dot.setAttribute('visibility', 'hidden');
   }
 }
 
@@ -1139,6 +1126,6 @@ setTimeout(adjustScrollTop, 50);
 setTimeout(adjustScrollTop, 300);
 </script>
 
-<div id="ver">myRadar v0.86</div>
+<div id="ver">myRadar v0.87</div>
 </body>
 </html>
