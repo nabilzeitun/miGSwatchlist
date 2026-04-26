@@ -999,7 +999,7 @@ function render(){
       const scrollEl = document.getElementById('scroll');
       const barH = document.getElementById('bar').offsetHeight;
       tbody.innerHTML=`<tr class="no-hover"><td colspan="9" style="padding:0;border:none">
-        <div style="min-height:calc(100vh - ${barH}px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--sur)">
+        <div style="height:calc(100vh - ${barH}px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--sur)">
           <div style="font-size:32px;margin-bottom:4px">🛌 💤</div>
           <div style="font-size:16px;font-weight:600;color:var(--txt);margin-top:16px;margin-bottom:16px">Todos los mercados están cerrados</div>
           
@@ -1069,6 +1069,6 @@ setTimeout(adjustScrollTop, 50);
 setTimeout(adjustScrollTop, 300);
 </script>
 
-<div id="ver">myRadar v0.64</div>
+<div id="ver">myRadar v0.65</div>
 </body>
 </html>
