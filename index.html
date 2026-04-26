@@ -66,6 +66,7 @@ html, body {
   .bar-row1 { flex: 0 0 auto; gap: 4px; justify-content: flex-start; }
   .bar-row2 { flex: 1 1 auto; gap: 3px; justify-content: center; }
   .bar-row3 { flex: 0 0 auto; gap: 3px; justify-content: flex-end; }
+.bar-row3 { display: none; }
 }
 
 .bsep { display: none; }
@@ -188,23 +189,23 @@ html, body {
 #last-upd { font-size: 9px; color: var(--lbl); font-variant-numeric: tabular-nums; white-space: nowrap; line-height: 1; }
 .fx-chip {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 0px; flex: 0 0 auto;
+  gap: 0; flex: 1 1 0;
   background: var(--sur);
   border: none;
-  border-radius: 10px;
-  padding: 3px 10px;
-  height: 36px;
-  min-width: 44px;
+  border-radius: 8px;
+  padding: 2px 6px;
+  height: 28px;
+  min-width: 40px;
   cursor: default;
-  box-shadow: 0 1px 3px rgba(0,0,0,.08);
+  box-shadow: 0 1px 2px rgba(0,0,0,.06);
 }
 
 .fx-lbl {
-  font-size: 9px; font-weight: 600; color: var(--lbl);
-  text-transform: uppercase; letter-spacing: .05em; line-height: 1;
+  font-size: 8px; font-weight: 600; color: var(--lbl);
+  text-transform: uppercase; letter-spacing: .04em; line-height: 1;
 }
 .fx-val {
-  font-family: var(--fnum); font-size: 12px; font-weight: 400;
+  font-family: var(--fnum); font-size: 11px; font-weight: 500;
   color: var(--txt2); font-variant-numeric: tabular-nums; line-height: 1.2;
 }
 .vix-high { color: var(--dn) !important; }
@@ -442,7 +443,7 @@ td {
 
 <!-- SINGLE CONTROL BAR -->
 <div id="bar">
-  <!-- ROW 1: search + mkt toggle + reload — always equidistant -->
+  <!-- ROW 1: search + filter chips + mkt toggle + reload -->
   <div class="bar-row1">
     <div class="search-wrap">
       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
@@ -450,6 +451,21 @@ td {
       </svg>
       <input class="search-input" type="text" id="q" placeholder="" oninput="render()">
     </div>
+    <button class="statbtn" id="f-loaded" onclick="setFilter('loaded')">
+      <span class="stat-l">Cargadas</span><span class="stat-v" id="s-ld">—</span>
+    </button>
+    <button class="statbtn" id="f-up" onclick="setFilter('up')">
+      <span class="stat-l">Baratas</span><span class="stat-v up" id="s-up">—</span>
+    </button>
+    <button class="statbtn" id="f-dn" onclick="setFilter('dn')">
+      <span class="stat-l">Caras</span><span class="stat-v dn" id="s-dn">—</span>
+    </button>
+    <button class="statbtn" id="f-flag" onclick="setFilter('flag')">
+      <span class="stat-l">🔥</span><span class="stat-v" id="s-flag">—</span>
+    </button>
+    <button class="statbtn" id="f-up-flag" onclick="setFilter('up-flag')">
+      <span class="stat-l">🛒🔥</span><span class="stat-v" id="s-upflag">—</span>
+    </button>
     <button class="mktbtn on" id="mf-open" onclick="toggleMktFilter()" title="Filtrar mercados abiertos">
       <svg id="mkt-ecg" width="28" height="18" viewBox="0 0 28 18" fill="none" stroke-linecap="round" stroke-linejoin="round">
         <defs>
@@ -459,8 +475,8 @@ td {
           </linearGradient>
         </defs>
         <path id="mkt-area" d="M0,14 L4,11 L8,8 L11,10 L16,4 L20,2 L24,5 L28,1 L28,18 L0,18 Z" fill="url(#area-g)"/>
-        <polyline id="mkt-line" points="0,14 4,11 8,8 11,10 16,4 20,2 24,5 28,1" fill="none" stroke="#3fb950" stroke-width="1.6"/>
-        <circle id="mkt-dot2" cx="28" cy="1" r="2.5" fill="#3fb950"/>
+        <polyline id="mkt-line" points="0,14 4,11 8,8 11,10 16,4 20,2 24,5 28,1" fill="none" stroke="#ffffff" stroke-width="1.6"/>
+        <circle id="mkt-dot2" cx="28" cy="1" r="2.5" fill="#ffffff"/>
       </svg>
     </button>
     <button class="reload-chip" id="btn-reload" onclick="manualReload()" title="Actualizar">
@@ -474,30 +490,8 @@ td {
     </button>
   </div>
 
-  <!-- ROW 2: filter buttons — equidistant -->
+  <!-- ROW 2: FX strip -->
   <div class="bar-row2">
-    <button class="statbtn" id="f-all" onclick="setFilter('all')">
-      <span class="stat-l">Total</span><span class="stat-v" id="s-tot">—</span>
-    </button>
-    <button class="statbtn" id="f-loaded" onclick="setFilter('loaded')">
-      <span class="stat-l">Cargadas</span><span class="stat-v" id="s-ld">—</span>
-    </button>
-    <button class="statbtn active" id="f-up" onclick="setFilter('up')">
-      <span class="stat-l">Baratas</span><span class="stat-v up" id="s-up">—</span>
-    </button>
-    <button class="statbtn" id="f-dn" onclick="setFilter('dn')">
-      <span class="stat-l">Caras</span><span class="stat-v dn" id="s-dn">—</span>
-    </button>
-    <button class="statbtn" id="f-flag" onclick="setFilter('flag')">
-      <span class="stat-l">🔥</span><span class="stat-v" id="s-flag">—</span>
-    </button>
-    <button class="statbtn" id="f-up-flag" onclick="setFilter('up-flag')">
-      <span class="stat-l">🛒🔥</span><span class="stat-v" id="s-upflag">—</span>
-    </button>
-  </div>
-
-  <!-- ROW 3: FX + VIX — equidistant -->
-  <div class="bar-row3">
     <div class="fx-chip"><span class="fx-lbl">EUR/USD</span><span class="fx-val" id="fx-eurusd">—</span></div>
     <div class="fx-chip"><span class="fx-lbl">EUR/GBP</span><span class="fx-val" id="fx-eurgbp">—</span></div>
     <div class="fx-chip"><span class="fx-lbl">EUR/HKD</span><span class="fx-val" id="fx-eurhkd">—</span></div>
@@ -538,7 +532,7 @@ const MF={NASDAQ:'NASDAQ',NYSE:'NYSE',US:'NYSE',OTC:'OTC',BME:'BME',LON:'LON',
           HKG:'HKEX',AMS:'AMS',EPA:'EPA',ETR:'ETR',ASX:'ASX',BIT:'BIT',
           VIE:'VIE',FRA:'FRA',SWX:'SWX'};
 
-let rows=[], sortKey='upside', sortDir=-1, filterMode='up';
+let rows=[], sortKey='upside', sortDir=-1, filterMode='all';
 let mktFilter='open'; // default: show only open markets
 
 // ── PARSE ──
@@ -728,7 +722,7 @@ function updateStats(){
   const avg=ok.length?ok.reduce((s,r)=>s+upside(r),0)/ok.length:null;
   const flagged = rows.filter(r=>r.flag).length;
   const upflag  = rows.filter(r=>r.flag&&r.price!=null&&upside(r)>0).length;
-  document.getElementById('s-tot').textContent=rows.length||'—';
+  const totEl=document.getElementById('s-tot'); if(totEl) totEl.textContent=rows.length||'—';
   document.getElementById('s-ld').textContent=ld.length+(rows.length?'/'+rows.length:'');
   document.getElementById('s-up').textContent=ups||'—';
   document.getElementById('s-dn').textContent=dns||'—';
@@ -768,7 +762,7 @@ function filterMsg(mode){
 
 function setFilter(mode){
   filterMode=mode;
-  ['all','loaded','up','dn','flag','up-flag','avg'].forEach(f=>{
+  ['loaded','up','dn','flag','up-flag'].forEach(f=>{
     const el=document.getElementById('f-'+f); if(el) el.classList.toggle('active',f===mode);
   });
   const msg = filterMsg(mode);
@@ -1140,6 +1134,6 @@ setTimeout(adjustScrollTop, 50);
 setTimeout(adjustScrollTop, 300);
 </script>
 
-<div id="ver">myRadar v0.73</div>
+<div id="ver">myRadar v0.74</div>
 </body>
 </html>
