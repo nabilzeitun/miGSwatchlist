@@ -122,9 +122,12 @@ html, body {
 }
 .mktbtn:hover { box-shadow: 0 2px 6px rgba(0,0,0,.15); }
 .mktbtn.on {
-  background: #0071e3;
-  box-shadow: 0 1px 4px rgba(0,113,227,.35);
-  color: #fff;
+  background: var(--sur);
+  box-shadow: 0 1px 3px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.08);
+}
+.mktbtn.on.markets-open {
+  background: var(--sur);
+  box-shadow: 0 1px 4px rgba(29,111,66,.3);
 }
 
 /* ── SEARCH ── */
@@ -198,7 +201,13 @@ html, body {
   50%  { opacity: .4; }
   100% { opacity: 1; }
 }
-.ecg-alive { animation: ecg-pulse 1.4s ease-in-out infinite; }
+@keyframes ecg-pulse-red {
+  0%   { opacity: 1; }
+  50%  { opacity: .25; }
+  100% { opacity: 1; }
+}
+.ecg-alive     { animation: ecg-pulse     1.4s ease-in-out infinite; }
+.ecg-alive-red { animation: ecg-pulse-red 1.8s ease-in-out infinite; }
 
 /* ── SCROLL ── */
 #scroll {
@@ -452,13 +461,13 @@ td {
       <svg id="mkt-ecg" width="28" height="18" viewBox="0 0 28 18" fill="none" stroke-linecap="round" stroke-linejoin="round">
         <defs>
           <linearGradient id="area-g" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#3fb950" stop-opacity="0.35"/>
-            <stop offset="100%" stop-color="#3fb950" stop-opacity="0"/>
+            <stop offset="0%" stop-color="#1d6f42" stop-opacity="0.3"/>
+            <stop offset="100%" stop-color="#1d6f42" stop-opacity="0"/>
           </linearGradient>
         </defs>
-        <path id="mkt-area" d="M0,14 L4,11 L8,8 L11,10 L16,4 L20,2 L24,5 L28,1 L28,18 L0,18 Z" fill="url(#area-g)"/>
-        <polyline id="mkt-line" points="0,14 4,11 8,8 11,10 16,4 20,2 24,5 28,1" fill="none" stroke="#ffffff" stroke-width="1.6"/>
-        <circle id="mkt-dot2" cx="28" cy="1" r="2.5" fill="#ffffff"/>
+        <path id="mkt-area" d="M0,16 L4,12 L8,9 L12,11 L16,5 L20,3 L24,6 L28,1 L28,18 L0,18 Z" fill="url(#area-g)"/>
+        <polyline id="mkt-line" points="0,16 4,12 8,9 12,11 16,5 20,3 24,6 28,1" fill="none" stroke="#1d6f42" stroke-width="1.6"/>
+        <circle id="mkt-dot2" cx="28" cy="1" r="2.5" fill="#1d6f42"/>
       </svg>
     </button>
 
@@ -778,28 +787,43 @@ function updateMktDot(){
   const dot  = document.getElementById('mkt-dot2');
   const grad = document.getElementById('area-g');
   if (!ecg) return;
-  const anyOpen = rows.length > 0 && rows.some(r => isMarketOpen(r.mkt));
-  if (anyOpen) {
-    const c = '#ffffff';
+
+  const filterOn = mktFilter === 'open';
+  const anyOpen  = rows.length > 0 && rows.some(r => isMarketOpen(r.mkt));
+  ecg.classList.remove('ecg-alive', 'ecg-alive-red');
+
+  if (filterOn && anyOpen) {
+    // State C: active + open → green sparkline with fill, pulsing
+    const c = '#1d6f42';
     line.setAttribute('stroke', c);
     dot.setAttribute('fill', c);
     grad.children[0].setAttribute('stop-color', c);
     grad.children[1].setAttribute('stop-color', c);
-    line.setAttribute('points', '0,14 4,11 8,8 11,10 16,4 20,2 24,5 28,1');
-    area.setAttribute('d', 'M0,14 L4,11 L8,8 L11,10 L16,4 L20,2 L24,5 L28,1 L28,18 L0,18 Z');
+    line.setAttribute('points', '0,16 4,12 8,9 12,11 16,5 20,3 24,6 28,1');
+    area.setAttribute('d', 'M0,16 L4,12 L8,9 L12,11 L16,5 L20,3 L24,6 L28,1 L28,18 L0,18 Z');
     dot.setAttribute('cx', '28'); dot.setAttribute('cy', '1');
     ecg.classList.add('ecg-alive');
-  } else {
+  } else if (filterOn && !anyOpen) {
+    // State B: active + closed → flat red fill, pulsing
     const c = '#f85149';
     line.setAttribute('stroke', c);
     dot.setAttribute('fill', c);
     grad.children[0].setAttribute('stop-color', c);
     grad.children[1].setAttribute('stop-color', c);
-    // flat line = dead market
     line.setAttribute('points', '0,9 28,9');
     area.setAttribute('d', 'M0,9 L28,9 L28,18 L0,18 Z');
     dot.setAttribute('cx', '28'); dot.setAttribute('cy', '9');
-    ecg.classList.remove('ecg-alive');
+    ecg.classList.add('ecg-alive-red');
+  } else {
+    // State A: inactive → flat red fill, static
+    const c = '#f85149';
+    line.setAttribute('stroke', c);
+    dot.setAttribute('fill', c);
+    grad.children[0].setAttribute('stop-color', c);
+    grad.children[1].setAttribute('stop-color', c);
+    line.setAttribute('points', '0,9 28,9');
+    area.setAttribute('d', 'M0,9 L28,9 L28,18 L0,18 Z');
+    dot.setAttribute('cx', '28'); dot.setAttribute('cy', '9');
   }
 }
 
@@ -1115,6 +1139,6 @@ setTimeout(adjustScrollTop, 50);
 setTimeout(adjustScrollTop, 300);
 </script>
 
-<div id="ver">myRadar v0.83</div>
+<div id="ver">myRadar v0.86</div>
 </body>
 </html>
