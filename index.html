@@ -42,7 +42,8 @@ html, body {
   border-bottom: 1px solid var(--brd);
   display: flex; flex-wrap: wrap;
   align-items: center;
-  padding: 3px 8px; gap: 2px;
+  justify-content: space-evenly;
+  padding: 4px 8px; gap: 4px;
   min-height: 44px;
 }
 #bar::-webkit-scrollbar { display: none; }
@@ -53,21 +54,11 @@ html, body {
   - ALL rows use space-evenly so items are always equidistant
   - At ≥1100px: rows go inline via flex:1 and we get a single line
 */
-/* Bar layout: two rows on narrow, one row on wide */
+/* Bar: single flex container, all chips equidistant */
 .bar-row1, .bar-row2 {
-  display: flex;
-  align-items: center;
-  justify-content: space-evenly;
-  gap: 4px;
-  width: 100%;
+  display: contents; /* dissolve rows — children go directly into #bar */
 }
 .bar-row3 { display: none; }
-
-@media (min-width: 1000px) {
-  #bar { flex-wrap: nowrap; }
-  .bar-row1 { flex: 1 1 auto; width: auto; justify-content: space-evenly; }
-  .bar-row2 { flex: 0 0 auto; width: auto; justify-content: flex-end; gap: 4px; }
-}
 
 .bsep { display: none; }
 /* ── STAT-FILTER CHIPS ── */
@@ -1135,6 +1126,6 @@ setTimeout(adjustScrollTop, 50);
 setTimeout(adjustScrollTop, 300);
 </script>
 
-<div id="ver">myRadar v0.80</div>
+<div id="ver">myRadar v0.81</div>
 </body>
 </html>
