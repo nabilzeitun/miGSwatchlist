@@ -926,47 +926,35 @@ function pillStyle(u) {
 
 // ── DAY CHANGE ──
 function dayChgStr(r) {
-  if (r.dayChg == null) return '<span style="color:var(--lbl)">—</span>';
+  if (r.dayChg == null) return '<span class="num" style="color:var(--lbl)">—</span>';
   const v   = r.dayChg;
   const str = (v >= 0 ? '+' : '') + v.toFixed(1) + '%';
-  const base = 'font-family:var(--fnum);font-size:11.5px;font-weight:600;';
 
-  // Extreme: beyond ±10% — intense color + pill highlight (like VIX)
-  if (v >= 10) {
-    return `<span class="pill" style="background:rgba(29,111,66,.25);color:#1d6f42;outline:1.5px solid rgba(29,111,66,.5)">${str}</span>`;
-  }
-  if (v <= -10) {
-    return `<span class="pill" style="background:rgba(192,57,43,.25);color:#c0392b;outline:1.5px solid rgba(192,57,43,.5)">${str}</span>`;
-  }
+  // All values wrapped in same-width container for consistent alignment
+  const wrap = (inner) => `<span style="display:inline-block;min-width:58px;text-align:center">${inner}</span>`;
 
-  // Gradient zone +3% to +10%
+  // Extreme: beyond ±10%
+  if (v >= 10)  return wrap(`<span class="pill" style="background:rgba(29,111,66,.25);color:#1d6f42;outline:1.5px solid rgba(29,111,66,.5)">${str}</span>`);
+  if (v <= -10) return wrap(`<span class="pill" style="background:rgba(192,57,43,.25);color:#c0392b;outline:1.5px solid rgba(192,57,43,.5)">${str}</span>`);
+
+  // Gradient +3% to +10%
   if (v >= 3) {
-    // t: 0 at +3%, 1 at +10%
-    const t  = Math.min(1, (v - 3) / 7);
-    // yellow-green at t=0 → green at t=1
-    const cr = Math.round(180 - 151 * t);   // 180→29
-    const cg = Math.round(210 - 99  * t);   // 210→111
-    const cb = Math.round(100 - 34  * t);   // 100→66
-    const bg    = `rgba(${cr},${cg},${cb},0.16)`;
-    const color = `rgb(${Math.round(cr*.6)},${Math.round(cg*.6)},${Math.round(cb*.6)})`;
-    return `<span class="pill" style="background:${bg};color:${color}">${str}</span>`;
+    const t = Math.min(1, (v - 3) / 7);
+    const cr = Math.round(180 - 151*t), cg = Math.round(210 - 99*t), cb = Math.round(100 - 34*t);
+    const bg = `rgba(${cr},${cg},${cb},0.16)`, color = `rgb(${Math.round(cr*.6)},${Math.round(cg*.6)},${Math.round(cb*.6)})`;
+    return wrap(`<span class="pill" style="background:${bg};color:${color}">${str}</span>`);
   }
 
-  // Gradient zone -3% to -10%
+  // Gradient -3% to -10%
   if (v <= -3) {
-    // t: 0 at -3%, 1 at -10%
-    const t  = Math.min(1, (Math.abs(v) - 3) / 7);
-    // yellow at t=0 → orange → red at t=1
-    const cr = Math.round(241 + (192 - 241) * t);
-    const cg = Math.round(196 + (57  - 196) * t);
-    const cb = Math.round(15  + (43  - 15)  * t);
-    const bg    = `rgba(${cr},${cg},${cb},0.16)`;
-    const color = `rgb(${Math.round(cr*.6)},${Math.round(cg*.6)},${Math.round(cb*.6)})`;
-    return `<span class="pill" style="background:${bg};color:${color}">${str}</span>`;
+    const t = Math.min(1, (Math.abs(v) - 3) / 7);
+    const cr = Math.round(241 + (192-241)*t), cg = Math.round(196 + (57-196)*t), cb = Math.round(15 + (43-15)*t);
+    const bg = `rgba(${cr},${cg},${cb},0.16)`, color = `rgb(${Math.round(cr*.6)},${Math.round(cg*.6)},${Math.round(cb*.6)})`;
+    return wrap(`<span class="pill" style="background:${bg};color:${color}">${str}</span>`);
   }
 
-  // Between -3% and +3%: same style as price/objetivo columns
-  return `<span class="num" style="color:var(--txt)">${str}</span>`;
+  // Between -3% and +3%: plain, same font as .num
+  return wrap(`<span class="num" style="color:var(--txt)">${str}</span>`);
 }
 
 // ── RENDER ──
@@ -1127,6 +1115,6 @@ setTimeout(adjustScrollTop, 50);
 setTimeout(adjustScrollTop, 300);
 </script>
 
-<div id="ver">myRadar v0.82</div>
+<div id="ver">myRadar v0.83</div>
 </body>
 </html>
