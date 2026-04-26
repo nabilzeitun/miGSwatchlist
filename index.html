@@ -356,7 +356,7 @@ td {
 
 /* ── TOAST ── */
 #toast {
-  position: fixed; bottom: 22px; left: 50%;
+  position: fixed; bottom: 44px; left: 50%;
   transform: translateX(-50%) translateY(50px);
   background: rgba(28,28,30,.88);
   color: #fff;
@@ -1002,7 +1002,7 @@ function render(){
         <div style="min-height:calc(100vh - ${barH}px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--sur)">
           <div style="font-size:32px;margin-bottom:4px">🛌 💤</div>
           <div style="font-size:16px;font-weight:600;color:var(--txt)">Todos los mercados están cerrados</div>
-          <div style="font-size:11px;color:var(--lbl);margin-bottom:12px">Horarios de apertura</div>
+          
           <div style="display:flex;flex-direction:column;gap:6px;text-align:left">
             ${rows2.map(r=>`
               <div style="display:flex;gap:12px;align-items:baseline">
@@ -1069,6 +1069,6 @@ setTimeout(adjustScrollTop, 50);
 setTimeout(adjustScrollTop, 300);
 </script>
 
-<div id="ver">myRadar v0.61</div>
+<div id="ver">myRadar v0.63</div>
 </body>
 </html>
