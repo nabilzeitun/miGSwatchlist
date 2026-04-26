@@ -305,6 +305,7 @@ td {
 .ctg  { text-align: right; }
 .cup  { text-align: right; }
 .cdchg { text-align: right; }
+.cdchg .pill { display: inline-block; min-width: 56px; text-align: center; }
 .c52  { text-align: right; width: 140px; }
 .num  { font-family: var(--fnum); font-size: 12px; font-variant-numeric: tabular-nums; }
 .cur  { font-size: .75em; color: var(--lbl); margin-left: 2px; vertical-align: baseline; }
@@ -964,8 +965,8 @@ function dayChgStr(r) {
     return `<span class="pill" style="background:${bg};color:${color}">${str}</span>`;
   }
 
-  // Between -3% and +3%: plain black, no background
-  return `<span style="${base}color:var(--txt)">${str}</span>`;
+  // Between -3% and +3%: same style as price/objetivo columns
+  return `<span class="num" style="color:var(--txt)">${str}</span>`;
 }
 
 // ── RENDER ──
@@ -1126,6 +1127,6 @@ setTimeout(adjustScrollTop, 50);
 setTimeout(adjustScrollTop, 300);
 </script>
 
-<div id="ver">myRadar v0.81</div>
+<div id="ver">myRadar v0.82</div>
 </body>
 </html>
