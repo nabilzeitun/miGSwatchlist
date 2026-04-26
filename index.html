@@ -761,6 +761,16 @@ function filterMsg(mode){
 }
 
 function setFilter(mode){
+  // Toggle off if already active → show all
+  if(filterMode===mode){ 
+    filterMode='all';
+    ['loaded','up','dn','flag','up-flag'].forEach(f=>{
+      const el=document.getElementById('f-'+f); if(el) el.classList.remove('active');
+    });
+    toast(rows.length+' empresas en myRadar');
+    render();
+    return;
+  }
   filterMode=mode;
   ['loaded','up','dn','flag','up-flag'].forEach(f=>{
     const el=document.getElementById('f-'+f); if(el) el.classList.toggle('active',f===mode);
@@ -1134,6 +1144,6 @@ setTimeout(adjustScrollTop, 50);
 setTimeout(adjustScrollTop, 300);
 </script>
 
-<div id="ver">myRadar v0.74</div>
+<div id="ver">myRadar v0.75</div>
 </body>
 </html>
