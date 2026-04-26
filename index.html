@@ -357,7 +357,8 @@ td {
 /* ── TOAST ── */
 #toast {
   position: fixed; bottom: 44px; left: 50%;
-  transform: translateX(-50%) translateY(50px);
+  transform: translateX(-50%) translateY(70px);
+  opacity: 0;
   background: rgba(28,28,30,.88);
   color: #fff;
   padding: 8px 18px;
@@ -365,10 +366,13 @@ td {
   font-size: 13px; font-weight: 500;
   z-index: 600; pointer-events: none;
   backdrop-filter: blur(12px);
-  transition: transform .22s cubic-bezier(.34,1.56,.64,1), opacity .2s;
+  transition: transform .28s cubic-bezier(.34,1.56,.64,1), opacity .2s ease;
   white-space: nowrap;
 }
-#toast.show { transform: translateX(-50%) translateY(0); }
+#toast.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
 
 #ver {
   position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%);
@@ -1056,7 +1060,16 @@ function render(){
 
 // ── TOAST ──
 let _tt;
-function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(_tt);_tt=setTimeout(()=>el.classList.remove('show'),2400);}
+function toast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg;
+  // Force reflow to restart animation if already showing
+  el.classList.remove('show');
+  void el.offsetWidth;
+  el.classList.add('show');
+  clearTimeout(_tt);
+  _tt=setTimeout(()=>el.classList.remove('show'),2600);
+}
 
 // ── INIT ──
 function adjustScrollTop() {
@@ -1069,6 +1082,6 @@ setTimeout(adjustScrollTop, 50);
 setTimeout(adjustScrollTop, 300);
 </script>
 
-<div id="ver">myRadar v0.66</div>
+<div id="ver">myRadar v0.67</div>
 </body>
 </html>
