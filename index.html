@@ -130,9 +130,9 @@ html, body {
 }
 .mktbtn:hover { box-shadow: 0 2px 6px rgba(0,0,0,.15); }
 .mktbtn.on {
-  background: var(--sur);
-  box-shadow: 0 1px 3px rgba(0,0,0,.12);
-  color: var(--up);
+  background: #0071e3;
+  box-shadow: 0 1px 4px rgba(0,113,227,.35);
+  color: #fff;
 }
 
 /* ── SEARCH ── */
@@ -793,7 +793,7 @@ function updateMktDot(){
   if (!ecg) return;
   const anyOpen = rows.length > 0 && rows.some(r => isMarketOpen(r.mkt));
   if (anyOpen) {
-    const c = '#3fb950';
+    const c = '#ffffff';
     line.setAttribute('stroke', c);
     dot.setAttribute('fill', c);
     grad.children[0].setAttribute('stop-color', c);
@@ -1140,6 +1140,6 @@ setTimeout(adjustScrollTop, 50);
 setTimeout(adjustScrollTop, 300);
 </script>
 
-<div id="ver">myRadar v0.72</div>
+<div id="ver">myRadar v0.73</div>
 </body>
 </html>
