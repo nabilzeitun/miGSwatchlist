@@ -53,20 +53,20 @@ html, body {
   - ALL rows use space-evenly so items are always equidistant
   - At ≥1100px: rows go inline via flex:1 and we get a single line
 */
-/* iOS-style: all items natural size, space-evenly distribution */
+/* Bar layout: two rows on narrow, one row on wide */
 .bar-row1, .bar-row2 {
-  display: flex; align-items: center;
-  width: 100%; flex: 1 1 100%;
+  display: flex;
+  align-items: center;
   justify-content: space-evenly;
-  gap: 0;
+  gap: 4px;
+  width: 100%;
 }
 .bar-row3 { display: none; }
 
-/* Wide: single row, still space-evenly across full width */
 @media (min-width: 1000px) {
   #bar { flex-wrap: nowrap; }
-  .bar-row1 { flex: 1 1 auto; }
-  .bar-row2 { flex: 0 0 auto; justify-content: flex-end; gap: 4px; }
+  .bar-row1 { flex: 1 1 auto; width: auto; justify-content: space-evenly; }
+  .bar-row2 { flex: 0 0 auto; width: auto; justify-content: flex-end; gap: 4px; }
 }
 
 .bsep { display: none; }
@@ -1135,6 +1135,6 @@ setTimeout(adjustScrollTop, 50);
 setTimeout(adjustScrollTop, 300);
 </script>
 
-<div id="ver">myRadar v0.79</div>
+<div id="ver">myRadar v0.80</div>
 </body>
 </html>
