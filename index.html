@@ -98,13 +98,14 @@ html, body {
   background: rgba(0,0,0,.04);
 }
 .statbtn.active {
-  background: #0071e3;
-  box-shadow: 0 1px 4px rgba(0,113,227,.35);
+  background: #fff;
+  border: 1.5px solid #1d1d1f;
+  box-shadow: 0 3px 8px rgba(0,0,0,.18), 0 1px 3px rgba(0,0,0,.1);
 }
-.statbtn.active .stat-l { color: rgba(255,255,255,.7); }
-.statbtn.active .stat-v { color: #fff; }
-.statbtn.active .stat-v.up { color: #fff; }
-.statbtn.active .stat-v.dn { color: #fff; }
+.statbtn.active .stat-l { color: #3a3a3c; }
+.statbtn.active .stat-v { color: #1d1d1f; }
+.statbtn.active .stat-v.up { color: #1d6f42; }
+.statbtn.active .stat-v.dn { color: #c0392b; }
 
 /* ── MARKET TOGGLE ── */
 .mktbtn {
@@ -122,8 +123,9 @@ html, body {
 }
 .mktbtn:hover { box-shadow: 0 2px 6px rgba(0,0,0,.15); }
 .mktbtn.on {
-  background: var(--sur);
-  box-shadow: 0 1px 3px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.08);
+  background: #fff;
+  border: 1.5px solid #1d1d1f;
+  box-shadow: 0 3px 8px rgba(0,0,0,.18), 0 1px 3px rgba(0,0,0,.1);
 }
 .mktbtn.on.markets-open {
   background: var(--sur);
@@ -434,7 +436,7 @@ td {
     <button class="statbtn" id="f-loaded" onclick="setFilter('loaded')">
       <span class="stat-l">Cargadas</span><span class="stat-v" id="s-ld">—</span>
     </button>
-    <button class="statbtn" id="f-up" onclick="setFilter('up')">
+    <button class="statbtn active" id="f-up" onclick="setFilter('up')">
       <span class="stat-l">Baratas</span><span class="stat-v up" id="s-up">—</span>
     </button>
     <button class="statbtn" id="f-dn" onclick="setFilter('dn')">
@@ -513,7 +515,7 @@ const MF={NASDAQ:'NASDAQ',NYSE:'NYSE',US:'NYSE',OTC:'OTC',BME:'BME',LON:'LON',
           HKG:'HKEX',AMS:'AMS',EPA:'EPA',ETR:'ETR',ASX:'ASX',BIT:'BIT',
           VIE:'VIE',FRA:'FRA',SWX:'SWX'};
 
-let rows=[], sortKey='upside', sortDir=-1, filterMode='all';
+let rows=[], sortKey='upside', sortDir=-1, filterMode='up';
 let mktFilter='open'; // default: show only open markets
 
 // ── PARSE ──
@@ -1142,6 +1144,6 @@ setTimeout(adjustScrollTop, 50);
 setTimeout(adjustScrollTop, 300);
 </script>
 
-<div id="ver">myRadar v0.88</div>
+<div id="ver">myRadar v0.90</div>
 </body>
 </html>
