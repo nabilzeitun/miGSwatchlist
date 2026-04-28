@@ -1092,43 +1092,118 @@ function render(){
   if(!list.length){
     if(mktFilter==='open' && rows.length>0 && rows.every(r=>!isMarketOpen(r.mkt))){
       const mktSet=[...new Set(rows.map(r=>r.mkt))].sort();
-      // All possible hours — only show markets actually in portfolio
-      const ALL_HOURS={
-        'NYSE':  ['NYSE / NASDAQ','09:30–16:00 ET','14:30–21:00 UTC'],
-        'NASDAQ':['NYSE / NASDAQ','09:30–16:00 ET','14:30–21:00 UTC'],
-        'OTC':   ['NYSE / NASDAQ','09:30–16:00 ET','14:30–21:00 UTC'],
-        'BME':   ['BME (Madrid)','09:00–17:30 CET','08:00–16:30 UTC'],
-        'LON':   ['LON (Londres)','08:00–16:30 GMT','08:00–16:30 UTC'],
-        'EPA':   ['EPA (París)','09:00–17:30 CET','08:00–16:30 UTC'],
-        'ETR':   ['ETR (Fráncfort)','09:00–17:30 CET','08:00–16:30 UTC'],
-        'AMS':   ['AMS (Ámsterdam)','09:00–17:30 CET','08:00–16:30 UTC'],
-        'BIT':   ['BIT (Milán)','09:00–17:30 CET','08:00–16:30 UTC'],
-        'VIE':   ['VIE (Viena)','09:00–17:30 CET','08:00–16:30 UTC'],
-        'FRA':   ['FRA (Fráncfort)','09:00–17:30 CET','08:00–16:30 UTC'],
-        'SWX':   ['SWX (Zúrich)','09:00–17:30 CET','08:00–16:30 UTC'],
-        'HKG':   ['HKG (Hong Kong)','09:30–16:00 HKT','01:30–08:00 UTC'],
-        'ASX':   ['ASX (Sídney)','10:00–16:00 AEST','00:00–06:00 UTC'],
+      // Convert market open/close to user's local time dynamically
+      // Market definitions: [displayName, timezone, openH, openM, closeH, closeM, utcOffset]
+      const MKT_DEF = {
+        'NYSE':   ['NYSE / NASDAQ','America/New_York', 9,30,16,0,'UTC−5/−4'],
+        'NASDAQ': ['NYSE / NASDAQ','America/New_York', 9,30,16,0,'UTC−5/−4'],
+        'OTC':    ['NYSE / NASDAQ','America/New_York', 9,30,16,0,'UTC−5/−4'],
+        'BME':    ['BME (Madrid)','Europe/Madrid',     9,0,17,30,'UTC+1/+2'],
+        'LON':    ['LON (Londres)','Europe/London',    8,0,16,30,'UTC+0/+1'],
+        'EPA':    ['EPA (París)','Europe/Paris',       9,0,17,30,'UTC+1/+2'],
+        'ETR':    ['ETR (Fráncfort)','Europe/Berlin',  9,0,17,30,'UTC+1/+2'],
+        'AMS':    ['AMS (Ámsterdam)','Europe/Amsterdam',9,0,17,30,'UTC+1/+2'],
+        'BIT':    ['BIT (Milán)','Europe/Rome',        9,0,17,30,'UTC+1/+2'],
+        'VIE':    ['VIE (Viena)','Europe/Vienna',      9,0,17,30,'UTC+1/+2'],
+        'FRA':    ['FRA (Fráncfort)','Europe/Berlin',  9,0,17,30,'UTC+1/+2'],
+        'SWX':    ['SWX (Zúrich)','Europe/Zurich',     9,0,17,30,'UTC+1/+2'],
+        'HKG':    ['HKG (Hong Kong)','Asia/Hong_Kong', 9,30,16,0,'UTC+8'],
+        'ASX':    ['ASX (Sídney)','Australia/Sydney', 10,0,16,0,'UTC+10/+11'],
       };
-      // Build from actual markets in rows (deduplicated by display name)
+
+      // Convert a market time (in its tz) to user local time string
+      const toLocal = (tz, h, m) => {
+        // Create a date with that time in the market's timezone using today's date
+        const ref = new Date();
+        // Use Intl to find the offset between market tz and UTC
+        const mktParts = new Intl.DateTimeFormat('en-US',{
+          timeZone:tz, hour:'numeric', minute:'numeric',
+          hour12:false, year:'numeric', month:'numeric', day:'numeric'
+        }).formatToParts(ref);
+        const get = t => parseInt(mktParts.find(p=>p.type===t)?.value||0);
+        // Build a UTC date that represents today at h:m in market tz
+        const mktNow = new Date(ref);
+        mktNow.setFullYear(get('year'), get('month')-1, get('day'));
+        // Get offset: diff between UTC and market local
+        const utcMs = ref.getTime();
+        const mktMs = new Date(new Intl.DateTimeFormat('en-US',{
+          timeZone:tz, hour12:false,
+          year:'numeric',month:'2-digit',day:'2-digit',
+          hour:'2-digit',minute:'2-digit',second:'2-digit'
+        }).format(ref)).getTime();
+        // Use a known reference approach: create a date at market open time
+        const marketDate = new Date(ref);
+        // Set to market open using the timezone offset trick
+        const localOffset = ref.getTimezoneOffset(); // in minutes, negative for east
+        const mktStr = `${get('year')}-${String(get('month')).padStart(2,'0')}-${String(get('day')).padStart(2,'0')}T${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:00`;
+        // Parse as if in market tz, then format in user local tz
+        const tempDate = new Date(mktStr + 'Z'); // treat as UTC first
+        // Get the market's UTC offset at that time
+        const mktFormatter = new Intl.DateTimeFormat('en-US',{timeZone:tz,hour:'numeric',minute:'numeric',hour12:false});
+        // Correct approach: find UTC time that equals h:m in market tz
+        // Binary search alternative: use known date math
+        const today = new Date();
+        today.setHours(0,0,0,0);
+        // Create date at h:m in market tz by iterating through UTC hours
+        // Simple approach: create date string and parse
+        const dateStr = today.toISOString().split('T')[0];
+        const utcDate = new Date(`${dateStr}T${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:00Z`);
+        // Get what time this UTC moment corresponds to in market tz
+        const mktTimeAtUTC = new Intl.DateTimeFormat('en-US',{
+          timeZone:tz, hour:'numeric', minute:'numeric', hour12:false
+        }).format(utcDate);
+        // We need the inverse: what UTC time = h:m in market tz
+        // Use Intl offset detection
+        const refForOffset = new Date(`${dateStr}T12:00:00Z`); // noon UTC
+        const mktNoonStr = new Intl.DateTimeFormat('en-US',{
+          timeZone:tz, hour:'numeric', minute:'numeric', hour12:false
+        }).formatToParts(refForOffset);
+        const mktNoonH = parseInt(mktNoonStr.find(p=>p.type==='hour')?.value||12);
+        const mktNoonM = parseInt(mktNoonStr.find(p=>p.type==='minute')?.value||0);
+        const mktOffsetMin = (12*60) - (mktNoonH*60 + mktNoonM); // UTC - mktLocal
+        // UTC time of market open = market local time + offset
+        const utcOpenMs  = (h*60+m + mktOffsetMin) * 60000;
+        const utcCloseMs = (h*60+m + mktOffsetMin) * 60000; // placeholder
+        // Convert to user local
+        const userDate = new Date(today.getTime() + utcOpenMs);
+        const userH = userDate.getHours();
+        const userM = userDate.getMinutes();
+        return String(userH).padStart(2,'0') + ':' + String(userM).padStart(2,'0');
+      };
+
+      // Simpler, reliable approach using Intl offset
+      const mktToLocal = (tz, oh, om, ch, cm) => {
+        const today = new Date();
+        const dateStr = today.toISOString().split('T')[0];
+        // Detect market UTC offset at noon today
+        const noon = new Date(`${dateStr}T12:00:00Z`);
+        const parts = new Intl.DateTimeFormat('en-US',{
+          timeZone:tz, hour:'numeric', minute:'numeric', hour12:false
+        }).formatToParts(noon);
+        const mktH = parseInt(parts.find(p=>p.type==='hour')?.value||12);
+        const mktM = parseInt(parts.find(p=>p.type==='minute')?.value||0);
+        const offsetMin = 12*60 - (mktH*60+mktM); // minutes: UTC = local + offset
+        // Convert open/close from market local to UTC then to user local
+        const toUser = (h,m) => {
+          const utcMs = (h*60+m+offsetMin)*60000;
+          const d = new Date(new Date(`${dateStr}T00:00:00Z`).getTime() + utcMs);
+          return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+        };
+        return [toUser(oh,om), toUser(ch,cm)];
+      };
+
       const seen=new Set();
-      const rows2=mktSet.map(m=>ALL_HOURS[m]).filter(r=>r&&!seen.has(r[0])&&seen.add(r[0]));
+      const rows2=mktSet.map(m=>{
+        const def=MKT_DEF[m];
+        if(!def||seen.has(def[0])) return null;
+        seen.add(def[0]);
+        const [name,tz,oh,om,ch,cm,utcLbl]=def;
+        const [localOpen, localClose] = mktToLocal(tz,oh,om,ch,cm);
+        return [name, `${localOpen}–${localClose}`, `(${utcLbl})`];
+      }).filter(Boolean);
       // Hide thead while showing closed message
       document.querySelector('thead').style.display = 'none';
-      // local time label per market (local hours + UTC offset)
-      const LOCAL_LABEL = {
-        'NYSE / NASDAQ': '09:30–16:00 (UTC−5)',
-        'BME (Madrid)':  '09:00–17:30 (UTC+1)',
-        'LON (Londres)': '08:00–16:30 (UTC+0)',
-        'EPA (París)':   '09:00–17:30 (UTC+1)',
-        'ETR (Fráncfort)':'09:00–17:30 (UTC+1)',
-        'AMS (Ámsterdam)':'09:00–17:30 (UTC+1)',
-        'BIT (Milán)':   '09:00–17:30 (UTC+1)',
-        'VIE (Viena)':   '09:00–17:30 (UTC+1)',
-        'FRA (Fráncfort)':'09:00–17:30 (UTC+1)',
-        'SWX (Zúrich)':  '09:00–17:30 (UTC+1)',
-        'HKG (Hong Kong)':'09:30–16:00 (UTC+8)',
-        'ASX (Sídney)':  '10:00–16:00 (UTC+10)',
-      };
+      // hours computed dynamically in rows2
       const scrollEl = document.getElementById('scroll');
       const barH = document.getElementById('bar').offsetHeight;
       tbody.innerHTML=`<tr class="no-hover"><td colspan="9" style="padding:0;border:none">
@@ -1138,9 +1213,10 @@ function render(){
           
           <div style="display:flex;flex-direction:column;gap:6px;text-align:left">
             ${rows2.map(r=>`
-              <div style="display:flex;gap:12px;align-items:baseline">
-                <span style="font-size:12px;font-weight:600;color:var(--txt2);min-width:130px">${r[0]}</span>
-                <span style="font-size:12px;color:var(--txt3);font-family:var(--fnum)">${LOCAL_LABEL[r[0]]||r[1]}</span>
+              <div style="display:flex;gap:16px;align-items:baseline">
+                <span style="font-size:12px;font-weight:600;color:var(--txt2);min-width:140px">${r[0]}</span>
+                <span style="font-size:12px;color:var(--txt3);font-family:var(--fnum)">${r[1]}</span>
+                <span style="font-size:11px;color:var(--lbl);font-family:var(--fnum)">${r[2]}</span>
               </div>
             `).join('')}
           </div>
@@ -1211,6 +1287,6 @@ setTimeout(adjustScrollTop, 50);
 setTimeout(adjustScrollTop, 300);
 </script>
 
-<div id="ver">myRadar v0.93</div>
+<div id="ver">myRadar v0.94</div>
 </body>
 </html>
