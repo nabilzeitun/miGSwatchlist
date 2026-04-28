@@ -764,13 +764,14 @@ function filterMsg(mode){
   const caras   = rows.filter(r=>r.price!=null&&upside(r)!=null&&upside(r)<=0).length;
   const dest    = rows.filter(r=>r.flag).length;
   const destBar = rows.filter(r=>r.flag&&r.price!=null&&upside(r)>0).length;
+  const mkt     = mktFilter==='open' ? ' y con mercado abierto' : '';
   const msgs = {
-    'all':     `${total} empresas en myRadar`,
-    'loaded':  `${loaded} empresas con precios`,
-    'up':      `${baratas} empresas baratas`,
-    'dn':      `${caras} empresas caras`,
-    'flag':    `${dest} empresas destacadas`,
-    'up-flag': `${destBar} empresas destacadas y baratas`,
+    'all':     `${total} empresas en myRadar${mkt}`,
+    'loaded':  `${loaded} empresas con precios${mkt}`,
+    'up':      `${baratas} empresas baratas${mkt}`,
+    'dn':      `${caras} empresas caras${mkt}`,
+    'flag':    `${dest} empresas destacadas${mkt}`,
+    'up-flag': `${destBar} empresas destacadas y baratas, ¡a comprar!${mkt ? ' y con mercado abierto' : ''}`,
   };
   return msgs[mode] || '';
 }
@@ -799,7 +800,8 @@ function toggleMktFilter(){
   mktFilter = mktFilter==='open' ? null : 'open';
   document.getElementById('mf-open').className='mktbtn'+(mktFilter?' on':'');
   updateMktDot();
-  toast(mktFilter ? 'Mostrando mercados abiertos' : 'Mostrando todos los mercados, cerrados y abiertos');
+  const mktMsg = filterMsg(filterMode);
+  toast(mktMsg || (mktFilter ? 'Mercados abiertos' : 'Todos los mercados'));
   render();
 }
 
@@ -1171,11 +1173,11 @@ function adjustScrollTop() {
   if (barH > 0) document.getElementById('scroll').style.top = barH + 'px';
 }
 window.addEventListener('resize', adjustScrollTop);
-updateStats(); render(); loadSheet(); loadFX();
+updateStats(); render(); loadSheet(true); loadFX();
 setTimeout(adjustScrollTop, 50);
 setTimeout(adjustScrollTop, 300);
 </script>
 
-<div id="ver">myRadar v0.91</div>
+<div id="ver">myRadar v0.92</div>
 </body>
 </html>
