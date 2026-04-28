@@ -54,11 +54,43 @@ html, body {
   - ALL rows use space-evenly so items are always equidistant
   - At ≥1100px: rows go inline via flex:1 and we get a single line
 */
-/* Bar: single flex container, all chips equidistant */
-.bar-row1, .bar-row2 {
-  display: contents; /* dissolve rows — children go directly into #bar */
+/* Bar: two atomic groups that wrap together */
+#bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 8px;
+  gap: 4px;
+  min-height: 44px;
 }
+
+/* Each row = atomic flex group that never breaks internally */
+.bar-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  gap: 4px;
+  flex: 1 1 100%;   /* own line when wrapping */
+  min-width: 0;
+}
+
+.bar-row2 {
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  gap: 4px;
+  flex: 1 1 100%;   /* own line when wrapping */
+  min-width: 0;
+}
+
 .bar-row3 { display: none; }
+
+/* Wide: both rows on one line */
+@media (min-width: 860px) {
+  .bar-row1 { flex: 1 1 auto; justify-content: space-evenly; }
+  .bar-row2 { flex: 0 0 auto; justify-content: flex-end; gap: 4px; }
+}
 
 .bsep { display: none; }
 /* ── STAT-FILTER CHIPS ── */
@@ -1144,6 +1176,6 @@ setTimeout(adjustScrollTop, 50);
 setTimeout(adjustScrollTop, 300);
 </script>
 
-<div id="ver">myRadar v0.90</div>
+<div id="ver">myRadar v0.91</div>
 </body>
 </html>
