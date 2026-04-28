@@ -858,39 +858,55 @@ function range52svg(r){
 }
 
 // ── MARKET HOURS ──
-// Returns true if the given exchange is currently open.
-// All times compared in UTC.
+// Uses Intl.DateTimeFormat to get the LOCAL time in each market's timezone.
+// This is always correct regardless of the user's device timezone.
 function isMarketOpen(mkt) {
   const now = new Date();
-  const utc = now.getTime() + now.getTimezoneOffset() * 60000;
-  const day = now.getUTCDay(); // 0=Sun,6=Sat
-  if (day === 0 || day === 6) return false; // weekend closed for all
 
-  // Helper: is UTC time between hh:mm and hh:mm?
-  const between = (h1,m1,h2,m2) => {
-    const t = now.getUTCHours()*60+now.getUTCMinutes();
-    return t >= h1*60+m1 && t < h2*60+m2;
+  // Get local time in a given IANA timezone
+  const localTime = (tz) => {
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone: tz,
+      hour: 'numeric', minute: 'numeric',
+      weekday: 'short', hour12: false
+    }).formatToParts(now);
+    const get = (t) => parseInt(parts.find(p=>p.type===t)?.value||'0');
+    const weekday = parts.find(p=>p.type==='weekday')?.value;
+    const isWeekend = weekday==='Sat' || weekday==='Sun';
+    return { h: get('hour'), m: get('minute'), isWeekend };
+  };
+
+  // Is local time in timezone between open and close?
+  const open = (tz, oh, om, ch, cm) => {
+    const {h, m, isWeekend} = localTime(tz);
+    if (isWeekend) return false;
+    const t = h*60+m, o = oh*60+om, c = ch*60+cm;
+    return t >= o && t < c;
   };
 
   switch(mkt) {
-    // NYSE / NASDAQ: 14:30–21:00 UTC (09:30–16:00 ET, UTC-5 winter)
     case 'NYSE': case 'NASDAQ': case 'US': case 'OTC':
-      return between(14,30, 21,0);
-    // BME (Madrid): 08:00–16:30 UTC
+      return open('America/New_York', 9,30, 16,0);
     case 'BME':
-      return between(8,0, 16,30);
-    // LON (London): 08:00–16:30 UTC
+      return open('Europe/Madrid', 9,0, 17,30);
     case 'LON':
-      return between(8,0, 16,30);
-    // EPA (Paris) / ETR (Frankfurt) / AMS / BIT / VIE / FRA / SWX: 08:00–16:30 UTC
-    case 'EPA': case 'ETR': case 'AMS': case 'BIT': case 'VIE': case 'FRA': case 'SWX':
-      return between(8,0, 16,30);
-    // HKG (Hong Kong): 01:30–08:00 UTC (09:30–16:00 HKT, UTC+8)
+      return open('Europe/London', 8,0, 16,30);
+    case 'EPA':
+      return open('Europe/Paris', 9,0, 17,30);
+    case 'ETR': case 'FRA':
+      return open('Europe/Berlin', 9,0, 17,30);
+    case 'AMS':
+      return open('Europe/Amsterdam', 9,0, 17,30);
+    case 'BIT':
+      return open('Europe/Rome', 9,0, 17,30);
+    case 'VIE':
+      return open('Europe/Vienna', 9,0, 17,30);
+    case 'SWX':
+      return open('Europe/Zurich', 9,0, 17,30);
     case 'HKG': case 'HKEX':
-      return between(1,30, 8,0);
-    // ASX (Australia): 23:00–05:00 UTC (09:00–15:00 AEST, UTC+10)
+      return open('Asia/Hong_Kong', 9,30, 16,0);
     case 'ASX':
-      return between(23,0, 24,0) || between(0,0, 5,0);
+      return open('Australia/Sydney', 10,0, 16,0);
     default:
       return false;
   }
@@ -1126,6 +1142,6 @@ setTimeout(adjustScrollTop, 50);
 setTimeout(adjustScrollTop, 300);
 </script>
 
-<div id="ver">myRadar v0.87</div>
+<div id="ver">myRadar v0.88</div>
 </body>
 </html>
