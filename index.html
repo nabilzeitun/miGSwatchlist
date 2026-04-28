@@ -228,6 +228,29 @@ html, body {
 .vix-high { color: var(--dn) !important; }
 .vix-mid  { color: #b8860b !important; }
 .vix-low  { color: var(--up) !important; }
+
+/* VIX alert styles — option 3 */
+@keyframes vix-pulse-warn   { 0%,100%{opacity:1} 50%{opacity:.5} }
+@keyframes vix-pulse-danger { 0%,100%{opacity:1} 50%{opacity:.45} }
+
+.vix-chip-warn {
+  background: #fdf0d5 !important;
+  box-shadow: 0 0 0 1.5px #e6a817, 0 1px 3px rgba(0,0,0,.08) !important;
+}
+.vix-chip-warn .fx-lbl { color: #7d5200 !important; }
+.vix-warn {
+  color: #7d5200 !important;
+  animation: vix-pulse-warn 1.5s ease-in-out infinite;
+}
+.vix-chip-danger {
+  background: #fde8e8 !important;
+  box-shadow: 0 0 0 1.5px #e74c3c, 0 1px 3px rgba(0,0,0,.08) !important;
+}
+.vix-chip-danger .fx-lbl { color: #8b0000 !important; }
+.vix-danger {
+  color: #8b0000 !important;
+  animation: vix-pulse-danger 1s ease-in-out infinite;
+}
 @keyframes ro { to { transform: rotate(360deg); } }
 #btn-reload.spinning svg { animation: ro .65s linear infinite; }
 
@@ -718,8 +741,18 @@ async function loadFX() {
     const vix = data['VIX'];
     if (vixEl && vix != null) {
       vixEl.textContent = vix.toFixed(2);
-      vixEl.className = 'fx-val ' + (vix > 30 ? 'vix-high' : vix >= 20 ? 'vix-mid' : 'vix-low');
-    } // if vix null, keep previous displayed value
+      const vixChip = vixEl.closest('.fx-chip');
+      if (vix >= 40) {
+        vixEl.className = 'fx-val vix-danger';
+        if (vixChip) vixChip.className = 'fx-chip vix-chip-danger';
+      } else if (vix >= 30) {
+        vixEl.className = 'fx-val vix-warn';
+        if (vixChip) vixChip.className = 'fx-chip vix-chip-warn';
+      } else {
+        vixEl.className = 'fx-val ' + (vix >= 20 ? 'vix-mid' : 'vix-low');
+        if (vixChip) vixChip.className = 'fx-chip';
+      }
+    }
   } catch(e) {
     console.warn('FX load error:', e);
   }
@@ -1178,6 +1211,6 @@ setTimeout(adjustScrollTop, 50);
 setTimeout(adjustScrollTop, 300);
 </script>
 
-<div id="ver">myRadar v0.92</div>
+<div id="ver">myRadar v0.93</div>
 </body>
 </html>
